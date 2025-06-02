@@ -516,9 +516,11 @@ function setupEventListeners() {
     document.getElementById('new-list-name').focus();
   });
   
-  // Add album button
-  document.getElementById('add-album-btn')?.addEventListener('click', () => {
-    document.getElementById('add-album-modal').classList.remove('hidden');
+  // Add album buttons (desktop and mobile FAB)
+  ['add-album-btn', 'add-album-fab'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      document.getElementById('add-album-modal').classList.remove('hidden');
+    });
   });
   
   // Import button

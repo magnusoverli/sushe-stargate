@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Production
+dist/
+build/
+
+# Data
+data/
+*.db
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Compiled CSS
+public/css/output.css
+
+# Sessions
+sessions/
+
+# Temporary files
+*.tmp
+*.temp

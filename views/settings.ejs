@@ -1,0 +1,301 @@
+<%- layout('layouts/main') %>
+
+<div class="min-h-screen bg-black">
+  <!-- Header -->
+  <header class="bg-gray-900 border-b border-gray-800 p-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-gray-400 hover:text-white">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-xl font-semibold">Settings</h1>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Settings Content -->
+  <div class="max-w-4xl mx-auto p-4 lg:p-6 space-y-6">
+    <!-- User Info -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">User Information</h2>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Email:</span>
+          <span><%= user.email %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Username:</span>
+          <span><%= user.username %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Member since:</span>
+          <span><%= new Date(user.createdAt).toLocaleDateString() %></span>
+        </div>
+        <% if (user.role === 'admin') { %>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Role:</span>
+            <span class="text-accent">Administrator</span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Theme Settings -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Theme</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Accent Color</label>
+          <div class="flex items-center gap-4">
+            <input type="color" id="accent-color" value="<%= user.accentColor %>" 
+                   class="w-20 h-10 bg-gray-800 border border-gray-700 rounded cursor-pointer">
+            <span class="text-sm text-gray-400">Current: <%= user.accentColor %></span>
+          </div>
+        </div>
+        <button id="save-theme" class="btn-primary">
+          Save Theme
+        </button>
+      </div>
+    </div>
+    
+    <!-- Change Password -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Change Password</h2>
+      <form id="change-password-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Current Password</label>
+          <input type="password" name="currentPassword" required
+                 class="input-dark w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">New Password</label>
+          <input type="password" name="newPassword" required minlength="8"
+                 class="input-dark w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Confirm New Password</label>
+          <input type="password" name="confirmPassword" required
+                 class="input-dark w-full">
+        </div>
+        <button type="submit" class="btn-primary">
+          Change Password
+        </button>
+      </form>
+    </div>
+    
+    <!-- Update Email -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Update Email</h2>
+      <form id="update-email-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">New Email</label>
+          <input type="email" name="email" required
+                 class="input-dark w-full" 
+                 placeholder="new@email.com">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Password</label>
+          <input type="password" name="password" required
+                 class="input-dark w-full"
+                 placeholder="Enter password to confirm">
+        </div>
+        <button type="submit" class="btn-primary">
+          Update Email
+        </button>
+      </form>
+    </div>
+    
+    <!-- Update Username -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Update Username</h2>
+      <form id="update-username-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">New Username</label>
+          <input type="text" name="username" required
+                 class="input-dark w-full" 
+                 pattern="[a-zA-Z0-9_]{3,30}"
+                 placeholder="newusername">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Password</label>
+          <input type="password" name="password" required
+                 class="input-dark w-full"
+                 placeholder="Enter password to confirm">
+        </div>
+        <button type="submit" class="btn-primary">
+          Update Username
+        </button>
+      </form>
+    </div>
+    
+    <!-- Admin Access -->
+    <% if (user.role !== 'admin') { %>
+      <div class="bg-gray-900 rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">Admin Access</h2>
+        <p class="text-sm text-gray-400 mb-4">
+          Enter the admin code to gain administrative privileges.
+        </p>
+        <form id="admin-code-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Admin Code</label>
+            <input type="text" name="adminCode" required
+                   class="input-dark w-full" 
+                   placeholder="Enter 8-character code"
+                   maxlength="8">
+          </div>
+          <button type="submit" class="btn-primary">
+            Submit Code
+          </button>
+        </form>
+      </div>
+    <% } %>
+    
+    <!-- Logout -->
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Session</h2>
+      <a href="/auth/logout" class="btn-secondary inline-block">
+        <i class="fas fa-sign-out-alt mr-2"></i>
+        Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Theme settings
+document.getElementById('save-theme')?.addEventListener('click', async () => {
+  const color = document.getElementById('accent-color').value;
+  
+  try {
+    const response = await fetch('/settings/update-accent-color', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color })
+    });
+    
+    if (response.ok) {
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Theme update error:', error);
+    alert('Failed to update theme');
+  }
+});
+
+// Change password
+document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  if (data.newPassword !== data.confirmPassword) {
+    alert('Passwords do not match');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/settings/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Password changed successfully');
+      e.target.reset();
+    } else {
+      alert(result.message || 'Failed to change password');
+    }
+  } catch (error) {
+    console.error('Password change error:', error);
+    alert('Failed to change password');
+  }
+});
+
+// Update email
+document.getElementById('update-email-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch('/settings/update-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Email updated successfully');
+      location.reload();
+    } else {
+      alert(result.message || 'Failed to update email');
+    }
+  } catch (error) {
+    console.error('Email update error:', error);
+    alert('Failed to update email');
+  }
+});
+
+// Update username
+document.getElementById('update-username-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch('/settings/update-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Username updated successfully');
+      location.reload();
+    } else {
+      alert(result.message || 'Failed to update username');
+    }
+  } catch (error) {
+    console.error('Username update error:', error);
+    alert('Failed to update username');
+  }
+});
+
+// Admin code
+document.getElementById('admin-code-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch('/admin/request-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Admin access granted!');
+      location.reload();
+    } else {
+      alert(result.message || 'Invalid code');
+    }
+  } catch (error) {
+    console.error('Admin code error:', error);
+    alert('Failed to submit code');
+  }
+});
+</script>

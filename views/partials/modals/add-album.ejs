@@ -1,0 +1,100 @@
+<div id="add-album-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-content relative z-10 max-h-[90vh] overflow-y-auto">
+    <div class="bg-gray-900 rounded-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Add Album</h3>
+        <button data-modal-close class="text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <!-- List selector -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Add to List</label>
+        <select id="list-selector" class="input-dark w-full">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      
+      <!-- Toggle between search and manual -->
+      <div class="flex justify-end mb-4">
+        <button id="manual-entry-toggle" class="text-sm text-accent hover:text-accent-hover">
+          <i class="fas fa-edit mr-1"></i>Manual Entry
+        </button>
+      </div>
+      
+      <!-- Search form -->
+      <div id="search-form">
+        <div class="mb-4">
+          <div class="flex gap-2">
+            <button id="search-mode-toggle" class="btn-secondary">
+              <i class="fas fa-user mr-1"></i>Artist Search
+            </button>
+            <div class="flex-1 relative">
+              <input type="text" id="album-search-input" 
+                     class="input-dark w-full pr-10" 
+                     placeholder="Search for an artist...">
+              <button id="search-button" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Search results -->
+        <div id="search-results" class="hidden">
+          <div id="artist-results" class="mb-4 max-h-60 overflow-y-auto"></div>
+          <div id="album-results" class="hidden"></div>
+        </div>
+      </div>
+      
+      <!-- Manual entry form -->
+      <div id="manual-entry-form" class="hidden">
+        <form id="manual-album-form">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Artist *</label>
+              <input type="text" name="artist" required
+                     class="input-dark w-full">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Album *</label>
+              <input type="text" name="album" required
+                     class="input-dark w-full">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Release Date</label>
+              <input type="text" name="release_date"
+                     class="input-dark w-full"
+                     placeholder="YYYY-MM-DD">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Country</label>
+              <select name="country" class="input-dark w-full">
+                <% countries.forEach(country => { %>
+                  <option value="<%= country %>"><%= country %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-2">Cover Art</label>
+              <input type="file" name="cover" accept="image/*"
+                     class="input-dark w-full">
+              <p class="text-xs text-gray-500 mt-1">Max 5MB, image files only</p>
+            </div>
+          </div>
+          
+          <div class="flex gap-3 mt-6">
+            <button type="submit" class="btn-primary flex-1">
+              Add Album
+            </button>
+            <button type="button" class="btn-secondary flex-1" data-modal-close>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

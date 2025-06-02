@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SuShe Stargate</title>
+  
+  <!-- Meta tags -->
+  <meta name="description" content="Personal music album collection manager">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  <!-- User data -->
+  <% if (user) { %>
+    <meta name="user-accent-color" content="<%= user.accentColor %>">
+    <meta name="last-selected-list" content="<%= user.lastSelectedList %>">
+  <% } %>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/output.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <%- body %>
+  
+  <!-- Global scripts -->
+  <script>
+    // Reference data
+    window.countries = <%- JSON.stringify(countries || []) %>;
+    window.genres = <%- JSON.stringify(genres || []) %>;
+  </script>
+</body>
+</html>

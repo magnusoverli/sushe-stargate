@@ -1,0 +1,36 @@
+{
+  "name": "sushe-stargate",
+  "version": "1.0.0",
+  "description": "Music album collection manager",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "concurrently \"npm run watch:css\" \"nodemon src/server.js\"",
+    "build:css": "postcss public/css/input.css -o public/css/output.css",
+    "watch:css": "postcss public/css/input.css -o public/css/output.css --watch",
+    "init-db": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "session-file-store": "^1.5.0",
+    "nedb": "^1.8.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "bcryptjs": "^2.4.3",
+    "@sendgrid/mail": "^8.1.3",
+    "multer": "^1.4.5-lts.1",
+    "ejs": "^3.1.10",
+    "dotenv": "^16.4.5",
+    "express-flash": "^0.0.2",
+    "connect-flash": "^0.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "concurrently": "^9.0.1",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.4.49",
+    "postcss-cli": "^11.0.0",
+    "autoprefixer": "^10.4.20"
+  }
+}

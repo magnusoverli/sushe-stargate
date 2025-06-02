@@ -1,0 +1,38 @@
+<header class="bg-gray-900 border-b border-gray-800 flex-shrink-0">
+  <div class="flex items-center justify-between p-4">
+    <!-- Mobile menu button -->
+    <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+    
+    <!-- Current list name -->
+    <div class="flex items-center gap-4">
+      <h1 class="font-cinzel text-xl lg:text-2xl font-semibold text-accent glow-text">
+        <span class="hidden lg:inline">SuShe Stargate</span>
+        <span class="lg:hidden">SuShe</span>
+      </h1>
+      <span class="text-gray-400 hidden lg:inline">|</span>
+      <span id="current-list-name" class="text-lg hidden lg:inline"></span>
+    </div>
+    
+    <!-- Desktop actions -->
+    <div class="hidden lg:flex items-center gap-3">
+      <button id="add-album-btn" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i>Add Album
+      </button>
+      <button id="import-btn" class="btn-secondary">
+        <i class="fas fa-upload mr-2"></i>Import
+      </button>
+      <button id="export-btn" class="btn-secondary">
+        <i class="fas fa-download mr-2"></i>Export
+      </button>
+    </div>
+    
+    <!-- Mobile actions -->
+    <div class="flex lg:hidden items-center gap-3">
+      <button id="settings-btn" class="text-gray-400 hover:text-white">
+        <i class="fas fa-cog text-xl"></i>
+      </button>
+    </div>
+  </div>
+</header>

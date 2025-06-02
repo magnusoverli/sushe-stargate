@@ -1,0 +1,27 @@
+<div id="create-list-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-content relative z-10">
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h3 class="text-xl font-semibold mb-4">Create New List</h3>
+      
+      <form id="create-list-form">
+        <div class="mb-4">
+          <label for="new-list-name" class="block text-sm font-medium mb-2">List Name</label>
+          <input type="text" id="new-list-name" name="name" required
+                 class="input-dark w-full" 
+                 placeholder="My Favorite Albums"
+                 maxlength="50">
+        </div>
+        
+        <div class="flex gap-3">
+          <button type="submit" class="btn-primary flex-1">
+            Create List
+          </button>
+          <button type="button" class="btn-secondary flex-1" data-modal-close>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

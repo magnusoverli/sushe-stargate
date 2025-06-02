@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@400;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent-color: #dc2626;
+    --accent-color-hover: #ef4444;
+    --accent-color-light: #fca5a5;
+    --accent-color-dark: #991b1b;
+    --accent-color-shadow: rgba(220, 38, 38, 0.5);
+  }
+
+  body {
+    @apply bg-black text-white;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+}
+
+@layer components {
+  /* Glow effect */
+  .glow {
+    box-shadow: 0 0 20px var(--accent-color-shadow);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px var(--accent-color-shadow);
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-semibold py-2 px-4 rounded transition-all duration-200;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 20px var(--accent-color-shadow);
+  }
+
+  .btn-secondary {
+    @apply bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded transition-all duration-200;
+  }
+
+  /* Input styles */
+  .input-dark {
+    @apply bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+  }
+
+  /* Modal styles */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black bg-opacity-75 z-40;
+  }
+
+  .modal-content {
+    @apply bg-gray-900 rounded-lg shadow-2xl max-w-lg w-full mx-auto;
+  }
+
+  /* Table styles */
+  .table-dark {
+    @apply w-full text-left;
+  }
+
+  .table-dark th {
+    @apply bg-gray-900 text-gray-400 font-medium text-sm uppercase tracking-wider px-4 py-3;
+  }
+
+  .table-dark td {
+    @apply bg-gray-800 px-4 py-3 border-b border-gray-700;
+  }
+
+  .table-dark tr:hover td {
+    @apply bg-gray-700;
+  }
+
+  /* Sortable styles */
+  .sortable-ghost {
+    @apply opacity-40;
+  }
+
+  .sortable-drag {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+
+  .sortable-chosen {
+    @apply bg-gray-700;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin;
+  }
+
+  /* Album card for mobile */
+  .album-card {
+    @apply bg-gray-800 rounded-lg p-4 shadow-lg;
+  }
+
+  /* Context menu */
+  .context-menu {
+    @apply absolute bg-gray-800 rounded-lg shadow-xl py-2 z-50 min-w-[200px];
+  }
+
+  .context-menu-item {
+    @apply px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2;
+  }
+
+  /* Toast notifications */
+  .toast {
+    @apply fixed top-4 right-4 bg-gray-800 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-md;
+  }
+
+  .toast.success {
+    @apply border-l-4 border-green-500;
+  }
+
+  .toast.error {
+    @apply border-l-4 border-red-500;
+  }
+
+  .toast.warning {
+    @apply border-l-4 border-yellow-500;
+  }
+
+  /* Floating Action Button */
+  .fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 bg-accent hover:bg-accent-hover rounded-full shadow-lg flex items-center justify-center text-white z-30 transition-all duration-200;
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px var(--accent-color-shadow);
+  }
+}
+
+@layer utilities {
+  /* Safe area handling for iOS */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}

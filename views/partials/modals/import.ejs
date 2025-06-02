@@ -1,0 +1,46 @@
+<div id="import-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-content relative z-10">
+    <div class="bg-gray-900 rounded-lg p-6">
+      <h3 class="text-xl font-semibold mb-4">Import Albums</h3>
+      
+      <!-- File upload -->
+      <div class="mb-4">
+        <input type="file" id="import-file" accept=".json" class="hidden">
+        <div id="import-dropzone" 
+             class="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-accent transition-colors">
+          <i class="fas fa-cloud-upload-alt text-4xl text-gray-500 mb-2"></i>
+          <p class="text-gray-400">Drop JSON file here or click to browse</p>
+          <p class="text-sm text-gray-500 mt-1">Accepts .json files only</p>
+        </div>
+      </div>
+      
+      <!-- Import options -->
+      <div id="import-options" class="hidden space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Import to</label>
+          <select id="import-list-select" class="input-dark w-full">
+            <!-- Options will be populated -->
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Conflict Resolution</label>
+          <select id="import-conflict-select" class="input-dark w-full">
+            <option value="merge">Merge (keep both)</option>
+            <option value="overwrite">Overwrite existing</option>
+          </select>
+        </div>
+        
+        <div class="flex gap-3">
+          <button id="import-confirm-btn" class="btn-primary flex-1">
+            Import
+          </button>
+          <button type="button" class="btn-secondary flex-1" data-modal-close>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

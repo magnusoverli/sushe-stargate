@@ -1,3 +1,4 @@
+const { countries, genres } = require('./utils/helpers');
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -6,6 +7,7 @@ const FileStore = require('session-file-store')(session);
 const passport = require('passport');
 const flash = require('connect-flash');
 const multer = require('multer');
+const expressLayouts = require('express-ejs-layouts');
 
 // Import configurations
 const { initializeDatabase } = require('./config/database');
@@ -31,6 +33,10 @@ initializeDatabase();
 // Configure view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
+
+// Use express-ejs-layouts
+app.use(expressLayouts);
+app.set('layout', 'layouts/main');
 
 // Middleware
 app.use(express.static(path.join(__dirname, '../public')));
@@ -58,6 +64,11 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error');
   res.locals.user = req.user || null;
   res.locals.isAuthenticated = req.isAuthenticated();
+  
+  // Add countries and genres globally
+  res.locals.countries = countries;
+  res.locals.genres = genres;
+  
   next();
 });
 

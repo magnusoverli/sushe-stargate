@@ -135,6 +135,11 @@ async function selectList(listName) {
   // Display albums
   displayAlbums();
   
+  // Ensure covers are loaded after a small delay
+  setTimeout(() => {
+    loadVisibleCovers();
+  }, 100);
+  
   // Save preference
   await fetch('/api/user/last-list', {
     method: 'POST',
@@ -486,8 +491,20 @@ function initializeIntersectionObserver() {
 
 function loadVisibleCovers() {
   document.querySelectorAll('.album-cover[data-src]').forEach(img => {
-    app.observer.observe(img);
+    // Check if image is already in viewport
+    const rect = img.getBoundingClientRect();
+    const isVisible = rect.top >= 0 && 
+                     rect.left >= 0 && 
+                     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                     rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+    
+    if (isVisible && img.dataset.src && !img.src) {
+      // Load immediately if already visible
+      img.src = img.dataset.src;
+      img.onload = () => img.classList.add('loaded');
+    } else {
+      // Otherwise observe for lazy loading
+      app.observer.observe(img);
+    }
   });
 }
-
-// Additional functions will be in separate files (lists.js, albums.js, etc.)

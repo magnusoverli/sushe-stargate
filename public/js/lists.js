@@ -230,8 +230,12 @@ document.getElementById('clear-all-btn')?.addEventListener('click', async () => 
 const importInput = document.getElementById('import-file');
 const importDropzone = document.getElementById('import-dropzone');
 
-importDropzone?.addEventListener('click', () => importInput.click());
+// Click on dropzone should open file dialog
+importDropzone?.addEventListener('click', () => {
+  importInput.click();
+});
 
+// Drag and drop handlers
 importDropzone?.addEventListener('dragover', (e) => {
   e.preventDefault();
   importDropzone.classList.add('border-accent');
@@ -251,6 +255,7 @@ importDropzone?.addEventListener('drop', (e) => {
   }
 });
 
+// File input change handler
 importInput?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -260,6 +265,10 @@ importInput?.addEventListener('change', (e) => {
 
 async function handleImportFile(file) {
   try {
+    // Extract filename without extension for list name
+    const listName = file.name.replace(/\.json$/i, '');
+    
+    // Read and parse file
     const text = await file.text();
     const data = JSON.parse(text);
     
@@ -267,100 +276,214 @@ async function handleImportFile(file) {
       throw new Error('Invalid file format');
     }
     
-    // Show import options
-    const importList = document.getElementById('import-list-select');
-    const importOptions = document.getElementById('import-options');
-    
-    importList.innerHTML = `
-      <option value="new">Create new list</option>
-      ${Object.keys(app.lists).map(name => 
-        `<option value="${name}">${escapeHtml(name)}</option>`
-      ).join('')}
-    `;
-    
-    importOptions.classList.remove('hidden');
-    
-    // Store import data temporarily
-    window.pendingImportData = data;
+    // Check if list already exists
+    if (app.lists[listName]) {
+      // Show conflict dialog
+      showImportConflictDialog(listName, data);
+    } else {
+      // No conflict, create list directly
+      await createImportedList(listName, data);
+      
+      // Close modal and clean up
+      closeImportModal();
+      
+      showToast(`List "${listName}" imported successfully`, 'success');
+    }
     
   } catch (error) {
     console.error('Import error:', error);
     showToast('Failed to read import file', 'error');
+    // Also close modal on error
+    closeImportModal();
   }
 }
 
-document.getElementById('import-confirm-btn')?.addEventListener('click', async () => {
-  const listSelect = document.getElementById('import-list-select');
-  const conflictSelect = document.getElementById('import-conflict-select');
+function closeImportModal() {
+  document.getElementById('import-modal').classList.add('hidden');
+  document.getElementById('import-file').value = '';
+}
+
+async function createImportedList(listName, data) {
+  // Create list with imported data
+  const response = await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data })
+  });
   
-  const targetList = listSelect.value;
-  const conflictMode = conflictSelect.value;
+  if (!response.ok) {
+    throw new Error('Failed to create list');
+  }
   
-  if (!window.pendingImportData) return;
+  const list = await response.json();
+  app.lists[listName] = {
+    ...list,
+    data // Ensure we have the imported data
+  };
+  
+  // Update UI and select the new list
+  updateListsUI();
+  await selectList(listName);
+  
+  logActivity('list_imported', { 
+    listName, 
+    albumCount: data.length,
+    mode: 'new'
+  });
+}
+
+function showImportConflictDialog(listName, data) {
+  // Create conflict dialog
+  const dialog = document.createElement('div');
+  dialog.className = 'modal fixed inset-0 z-50 flex items-center justify-center p-4';
+  dialog.innerHTML = `
+    <div class="modal-backdrop" onclick="handleImportCancel()"></div>
+    <div class="modal-content relative z-10 max-w-md">
+      <div class="bg-gray-900 rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-4">List Already Exists</h3>
+        <p class="text-gray-400 mb-6">
+          A list named "<span class="font-medium text-white">${escapeHtml(listName)}</span>" already exists. 
+          What would you like to do?
+        </p>
+        
+        <div class="space-y-3">
+          <button onclick="handleImportConflict('${escapeHtml(listName)}', 'overwrite')" 
+                  class="w-full text-left p-3 bg-gray-800 hover:bg-gray-700 rounded">
+            <div class="font-medium">Replace existing list</div>
+            <div class="text-sm text-gray-400 mt-1">Delete current albums and import new ones</div>
+          </button>
+          
+          <button onclick="handleImportConflict('${escapeHtml(listName)}', 'merge')" 
+                  class="w-full text-left p-3 bg-gray-800 hover:bg-gray-700 rounded">
+            <div class="font-medium">Merge with existing list</div>
+            <div class="text-sm text-gray-400 mt-1">Keep existing albums and add new ones</div>
+          </button>
+          
+          <button onclick="handleImportConflict('${escapeHtml(listName)}', 'rename')" 
+                  class="w-full text-left p-3 bg-gray-800 hover:bg-gray-700 rounded">
+            <div class="font-medium">Create with new name</div>
+            <div class="text-sm text-gray-400 mt-1">Import as a new list with a different name</div>
+          </button>
+        </div>
+        
+        <button onclick="handleImportCancel()" 
+                class="btn-secondary w-full mt-6">
+          Cancel
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Store data temporarily
+  window.pendingImportData = data;
+  window.pendingImportListName = listName;
+  
+  // Close import modal when showing conflict dialog
+  closeImportModal();
+  
+  document.body.appendChild(dialog);
+}
+
+async function handleImportConflict(listName, mode) {
+  const data = window.pendingImportData;
+  if (!data) return;
   
   try {
-    let listName;
-    
-    if (targetList === 'new') {
-      // Create new list
-      listName = prompt('Enter name for new list:');
-      if (!listName) return;
+    if (mode === 'overwrite') {
+      // Replace existing list
+      app.lists[listName].data = data;
       
-      if (app.lists[listName]) {
+      await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data })
+      });
+      
+      logActivity('list_imported', { 
+        listName, 
+        albumCount: data.length,
+        mode: 'overwrite'
+      });
+      
+    } else if (mode === 'merge') {
+      // Merge with existing
+      const existingData = app.lists[listName].data || [];
+      const existingIds = new Set(existingData.map(a => a.album_id));
+      const newAlbums = data.filter(a => !existingIds.has(a.album_id));
+      app.lists[listName].data = [...existingData, ...newAlbums];
+      
+      await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: app.lists[listName].data })
+      });
+      
+      logActivity('list_imported', { 
+        listName, 
+        albumCount: app.lists[listName].data.length,
+        newAlbums: newAlbums.length,
+        mode: 'merge'
+      });
+      
+    } else if (mode === 'rename') {
+      // Get new name
+      const newName = prompt('Enter a new name for the list:', `${listName} (imported)`);
+      if (!newName || newName.trim() === '') return;
+      
+      // Check if new name also exists
+      if (app.lists[newName]) {
         showToast('A list with that name already exists', 'error');
         return;
       }
       
-      // Create list with imported data
-      const response = await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: window.pendingImportData })
-      });
+      await createImportedList(newName, data);
       
-      if (!response.ok) {
-        throw new Error('Failed to create list');
-      }
+      // Clean up and close dialog
+      document.querySelector('.modal').remove();
+      delete window.pendingImportData;
+      delete window.pendingImportListName;
       
-      const list = await response.json();
-      app.lists[listName] = list;
+      // Make sure import modal is also closed
+      closeImportModal();
       
-    } else {
-      // Import into existing list
-      listName = targetList;
-      let existingData = app.lists[listName].data || [];
-      
-      if (conflictMode === 'overwrite') {
-        app.lists[listName].data = window.pendingImportData;
-      } else if (conflictMode === 'merge') {
-        // Merge without duplicates
-        const existingIds = new Set(existingData.map(a => a.album_id));
-        const newAlbums = window.pendingImportData.filter(a => !existingIds.has(a.album_id));
-        app.lists[listName].data = [...existingData, ...newAlbums];
-      }
-      
-      // Save updated list
-      await saveCurrentList();
+      showToast(`List "${newName}" imported successfully`, 'success');
+      return;
     }
     
-    // Clean up
-    delete window.pendingImportData;
-    document.getElementById('import-modal').classList.add('hidden');
-    document.getElementById('import-options').classList.add('hidden');
-    importInput.value = '';
-    
+    // Update UI
     updateListsUI();
-    selectList(listName);
+    await selectList(listName);
+    
+    // Clean up and close dialog
+    document.querySelector('.modal').remove();
+    delete window.pendingImportData;
+    delete window.pendingImportListName;
+    
+    // Make sure import modal is also closed
+    closeImportModal();
     
     showToast('Import successful', 'success');
-    logActivity('list_imported', { 
-      listName, 
-      mode: conflictMode,
-      albumCount: app.lists[listName].data.length 
-    });
     
   } catch (error) {
-    console.error('Import error:', error);
+    console.error('Import conflict handling error:', error);
     showToast('Failed to import data', 'error');
+    // Close modal on error too
+    closeImportModal();
   }
-});
+}
+
+function handleImportCancel() {
+  // Remove conflict dialog
+  document.querySelector('.modal').remove();
+  
+  // Clean up temporary data
+  delete window.pendingImportData;
+  delete window.pendingImportListName;
+  
+  // Make sure import modal is closed
+  closeImportModal();
+}
+
+// Make functions globally available
+window.handleImportConflict = handleImportConflict;
+window.handleImportCancel = handleImportCancel;

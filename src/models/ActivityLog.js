@@ -1,84 +1,96 @@
-const { db } = require('../config/database');
+const { db, generateId } = require('../config/database');
 
 class ActivityLog {
   static async create(logData) {
     const log = {
+      id: generateId(),
       ...logData,
-      timestamp: new Date()
+      details: JSON.stringify(logData.details || {}),
+      timestamp: new Date().toISOString()
     };
     
-    return new Promise((resolve, reject) => {
-      db.activity.insert(log, (err, newLog) => {
-        if (err) reject(err);
-        else resolve(newLog);
-      });
-    });
+    const stmt = db.prepare(`
+      INSERT INTO activity (id, userId, action, details, timestamp, sessionId, ipAddress, userAgent)
+      VALUES (@id, @userId, @action, @details, @timestamp, @sessionId, @ipAddress, @userAgent)
+    `);
+    
+    stmt.run(log);
+    return { ...log, _id: log.id };
   }
   
   static async findByUser(userId, limit = 100) {
-    return new Promise((resolve, reject) => {
-      db.activity
-        .find({ userId })
-        .sort({ timestamp: -1 })
-        .limit(limit)
-        .exec((err, logs) => {
-          if (err) reject(err);
-          else resolve(logs);
-        });
-    });
+    const stmt = db.prepare(`
+      SELECT * FROM activity 
+      WHERE userId = ? 
+      ORDER BY timestamp DESC 
+      LIMIT ?
+    `);
+    
+    const logs = stmt.all(userId, limit);
+    return logs.map(log => ({
+      ...log,
+      details: JSON.parse(log.details),
+      _id: log.id
+    }));
   }
   
   static async findRecent(limit = 50) {
-    return new Promise((resolve, reject) => {
-      db.activity
-        .find({})
-        .sort({ timestamp: -1 })
-        .limit(limit)
-        .exec((err, logs) => {
-          if (err) reject(err);
-          else resolve(logs);
-        });
-    });
+    const stmt = db.prepare(`
+      SELECT * FROM activity 
+      ORDER BY timestamp DESC 
+      LIMIT ?
+    `);
+    
+    const logs = stmt.all(limit);
+    return logs.map(log => ({
+      ...log,
+      details: JSON.parse(log.details),
+      _id: log.id
+    }));
   }
   
   static async cleanOldLogs(daysToKeep) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
     
-    return new Promise((resolve, reject) => {
-      db.activity.remove(
-        { timestamp: { $lt: cutoffDate } },
-        { multi: true },
-        (err, numRemoved) => {
-          if (err) reject(err);
-          else resolve(numRemoved);
-        }
-      );
-    });
+    const stmt = db.prepare('DELETE FROM activity WHERE timestamp < ?');
+    const result = stmt.run(cutoffDate.toISOString());
+    return result.changes;
   }
   
   static async getStats(days = 7) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     
-    return new Promise((resolve, reject) => {
-      db.activity.find({ timestamp: { $gte: cutoffDate } }, (err, logs) => {
-        if (err) reject(err);
-        else {
-          const stats = {
-            totalActions: logs.length,
-            uniqueUsers: new Set(logs.map(log => log.userId)).size,
-            actionBreakdown: {}
-          };
-          
-          logs.forEach(log => {
-            stats.actionBreakdown[log.action] = (stats.actionBreakdown[log.action] || 0) + 1;
-          });
-          
-          resolve(stats);
-        }
+    const stmt = db.prepare(`
+      SELECT 
+        COUNT(*) as totalActions,
+        COUNT(DISTINCT userId) as uniqueUsers,
+        action,
+        COUNT(*) as actionCount
+      FROM activity 
+      WHERE timestamp >= ?
+      GROUP BY action
+    `);
+    
+    const results = stmt.all(cutoffDate.toISOString());
+    
+    const stats = {
+      totalActions: 0,
+      uniqueUsers: 0,
+      actionBreakdown: {}
+    };
+    
+    if (results.length > 0) {
+      stats.totalActions = results.reduce((sum, r) => sum + r.actionCount, 0);
+      stats.uniqueUsers = results[0].uniqueUsers;
+      
+      results.forEach(r => {
+        stats.actionBreakdown[r.action] = r.actionCount;
       });
-    });
+    }
+    
+    return stats;
   }
 }
 

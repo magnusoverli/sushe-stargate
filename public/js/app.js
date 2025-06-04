@@ -727,12 +727,19 @@ function setupEventListeners() {
   // Export button
   const exportBtn = document.getElementById('export-btn');
   if (exportBtn) {
+    // Remove any existing listeners to avoid duplicates
+    exportBtn.replaceWith(exportBtn.cloneNode(true));
+    const newExportBtn = document.getElementById('export-btn');
+    
     // Add click listener
-    exportBtn.addEventListener('click', exportCurrentList);
+    newExportBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent any default behavior
+      exportCurrentList();
+    });
     
     // Update text/icon for mobile devices
     if (isMobileDevice()) {
-      exportBtn.innerHTML = '<i class="fas fa-share mr-2"></i>Share List';
+      newExportBtn.innerHTML = '<i class="fas fa-share mr-2"></i>Share List';
     }
   }
   

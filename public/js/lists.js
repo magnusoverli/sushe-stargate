@@ -184,41 +184,81 @@ async function exportList(listName) {
   const blob = new Blob([json], { type: 'application/json' });
   const fileName = `${listName.replace(/[^a-z0-9]/gi, '_')}.json`;
   
-  // Detect if we're on mobile with share capabilities
+  // Detect if we're on mobile
   const isMobile = isMobileDevice();
   
-  if (isMobile) {
-    // Mobile behavior - always try to share
+  // Check if we can share files - fixed version
+  let canShareFiles = false;
+  if (navigator.share && navigator.canShare) {
     try {
-      const file = new File([blob], fileName, { type: 'application/json' });
-      
-      await navigator.share({
-        title: `SuShe Stargate - ${listName}`,
-        text: `My album list: ${listName} (${data.length} albums)`,
-        files: [file]
-      });
-      
-      showToast('List shared successfully', 'success');
-      logActivity('list_exported', { 
-        listName, 
-        albumCount: data.length, 
-        method: 'mobile_share' 
-      });
-      
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        // User cancelled share
-        showToast('Share cancelled', 'info');
-      } else {
-        // Share failed, fall back to download
-        console.error('Share failed:', error);
-        downloadList(blob, fileName);
-      }
+      const testFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+      canShareFiles = navigator.canShare({ files: [testFile] });
+    } catch (e) {
+      console.log('canShare test failed:', e);
+      canShareFiles = false;
     }
-  } else {
-    // Desktop behavior - always download
-    downloadList(blob, fileName);
   }
+  
+  console.log('Export attempt:', { 
+    isMobile, 
+    canShareFiles, 
+    hasShare: 'share' in navigator,
+    hasCanShare: 'canShare' in navigator 
+  });
+  
+  if (isMobile && navigator.share) {
+    try {
+      // First try file sharing if supported
+      if (canShareFiles) {
+        const file = new File([blob], fileName, { 
+          type: 'application/json',
+          lastModified: Date.now() 
+        });
+        
+        await navigator.share({
+          files: [file],
+          title: `SuShe Stargate - ${listName}`,
+          text: `My album list: ${listName} (${data.length} albums)`
+        });
+        
+        showToast('List shared successfully', 'success');
+        logActivity('list_exported', { 
+          listName, 
+          albumCount: data.length, 
+          method: 'mobile_share_file' 
+        });
+        return; // Exit early on success
+      } else {
+        // Fallback to text/URL sharing
+        // Create a data URL from the JSON
+        const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`;
+        
+        await navigator.share({
+          title: `SuShe Stargate - ${listName}`,
+          text: `My album list: ${listName} (${data.length} albums)`,
+          url: dataUrl
+        });
+        
+        showToast('List shared successfully', 'success');
+        logActivity('list_exported', { 
+          listName, 
+          albumCount: data.length, 
+          method: 'mobile_share_url' 
+        });
+        return; // Exit early on success
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      if (error.name === 'AbortError') {
+        showToast('Share cancelled', 'info');
+        return;
+      }
+      // Fall through to download on other errors
+    }
+  }
+  
+  // Fallback to download for desktop or if sharing failed
+  downloadList(blob, fileName);
 }
 
 // Helper function to handle the download fallback
@@ -246,102 +286,6 @@ function exportCurrentList() {
   }
   
   exportList(app.currentList);
-}
-
-// Export list with mobile share support
-async function exportList(listName) {
-  const list = app.lists[listName];
-  if (!list || !list.data) return;
-  
-  const data = list.data.map((album, index) => ({
-    ...album,
-    rank: index + 1,
-    points: list.data.length - index
-  }));
-  
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const fileName = `${listName.replace(/[^a-z0-9]/gi, '_')}.json`;
-  
-  // Detect if we're on mobile
-  const isMobile = isMobileDevice();
-  const canShareFiles = navigator.share && navigator.canShare && 
-                        await (async () => {
-                          try {
-                            const testFile = new File([''], 'test.txt');
-                            return navigator.canShare({ files: [testFile] });
-                          } catch {
-                            return false;
-                          }
-                        })();
-  
-  console.log('Export attempt:', { isMobile, canShareFiles });
-  
-  if (isMobile && canShareFiles) {
-    // Mobile with file sharing support
-    try {
-      const file = new File([blob], fileName, { type: 'application/json' });
-      
-      await navigator.share({
-        title: `SuShe Stargate - ${listName}`,
-        text: `My album list: ${listName} (${data.length} albums)`,
-        files: [file]
-      });
-      
-      showToast('List shared successfully', 'success');
-      logActivity('list_exported', { 
-        listName, 
-        albumCount: data.length, 
-        method: 'mobile_share' 
-      });
-      
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        showToast('Share cancelled', 'info');
-      } else {
-        console.error('Share failed:', error);
-        downloadList(blob, fileName);
-      }
-    }
-  } else if (isMobile && navigator.share) {
-    // Mobile but can only share text/URL - create a data URL
-    try {
-      // Convert to base64 data URL
-      const reader = new FileReader();
-      reader.onload = async function() {
-        const dataUrl = reader.result;
-        
-        try {
-          await navigator.share({
-            title: `SuShe Stargate - ${listName}`,
-            text: `My album list: ${listName} (${data.length} albums)\n\nCopy this data:`,
-            url: dataUrl
-          });
-          
-          showToast('List data shared', 'success');
-          logActivity('list_exported', { 
-            listName, 
-            albumCount: data.length, 
-            method: 'mobile_share_text' 
-          });
-        } catch (shareError) {
-          if (shareError.name === 'AbortError') {
-            showToast('Share cancelled', 'info');
-          } else {
-            downloadList(blob, fileName);
-          }
-        }
-      };
-      reader.readAsDataURL(blob);
-      
-    } catch (error) {
-      console.error('Share setup failed:', error);
-      downloadList(blob, fileName);
-    }
-  } else {
-    // Desktop or no share support - download
-    downloadList(blob, fileName);
-  }
 }
 
 // Clear all lists

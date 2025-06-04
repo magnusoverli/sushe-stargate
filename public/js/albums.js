@@ -10,6 +10,7 @@ const manualEntryForm = document.getElementById('manual-entry-form');
 
 let currentSearchMode = 'artist';
 let selectedArtistId = null;
+let selectedArtistCountry = null; // Store the selected artist's country
 
 // Toggle search mode
 searchModeToggle?.addEventListener('click', () => {
@@ -80,24 +81,30 @@ function displayArtistResults(artists) {
   }
   
   artistResults.innerHTML = artists.slice(0, 20).map(artist => `
-    <div class="p-3 hover:bg-gray-700 cursor-pointer rounded" onclick="selectArtist('${artist.id}', '${escapeHtml(artist.name)}')">
+    <div class="p-3 hover:bg-gray-700 cursor-pointer rounded" 
+         onclick='selectArtist(${JSON.stringify({
+           id: artist.id,
+           name: artist.name,
+           country: artist.country || artist.area?.name || ''
+         }).replace(/'/g, '&apos;')})'>
       <div class="font-medium">${escapeHtml(artist.name)}</div>
       ${artist.disambiguation ? `<div class="text-sm text-gray-400">${escapeHtml(artist.disambiguation)}</div>` : ''}
-      ${artist.country ? `<div class="text-xs text-gray-500">${artist.country}</div>` : ''}
+      ${artist.country || artist.area?.name ? `<div class="text-xs text-gray-500">${artist.country || artist.area?.name}</div>` : ''}
     </div>
   `).join('');
 }
 
-async function selectArtist(artistId, artistName) {
-  selectedArtistId = artistId;
+async function selectArtist(artistData) {
+  selectedArtistId = artistData.id;
+  selectedArtistCountry = artistData.country;
   
   // Update UI
   artistResults.innerHTML = `
     <div class="bg-gray-700 p-3 rounded mb-3">
       <div class="flex items-center justify-between">
         <div>
-          <div class="font-medium">${escapeHtml(artistName)}</div>
-          <div class="text-sm text-gray-400">Selected artist</div>
+          <div class="font-medium">${escapeHtml(artistData.name)}</div>
+          <div class="text-sm text-gray-400">Selected artist${artistData.country ? ` • ${artistData.country}` : ''}</div>
         </div>
         <button onclick="clearArtistSelection()" class="text-gray-400 hover:text-white">
           <i class="fas fa-times"></i>
@@ -111,10 +118,10 @@ async function selectArtist(artistId, artistName) {
   
   // Fetch albums
   try {
-    const response = await fetch(`/api/search/artist/${artistId}/albums`);
+    const response = await fetch(`/api/search/artist/${artistData.id}/albums`);
     const albums = await response.json();
     
-    displayAlbumResults(albums, artistName);
+    displayAlbumResults(albums, artistData.name);
   } catch (error) {
     console.error('Album fetch error:', error);
     showToast('Failed to fetch albums', 'error');
@@ -123,6 +130,7 @@ async function selectArtist(artistId, artistName) {
 
 function clearArtistSelection() {
   selectedArtistId = null;
+  selectedArtistCountry = null;
   artistResults.innerHTML = '';
   albumResults.innerHTML = '';
   searchResults.classList.add('hidden');
@@ -146,7 +154,13 @@ function displayAlbumResults(albums, artistName = null) {
         
         return `
           <div class="p-3 hover:bg-gray-700 cursor-pointer rounded flex justify-between items-center" 
-               onclick="addAlbumFromSearch('${escapeHtml(artist)}', '${escapeHtml(album.title)}', '${album.id}', '${releaseDate}')">
+               onclick='addAlbumFromSearch(${JSON.stringify({
+                 artist,
+                 album: album.title,
+                 albumId: album.id,
+                 releaseDate,
+                 country: selectedArtistCountry || ''
+               }).replace(/'/g, '&apos;')})'>
             <div>
               <div class="font-medium">${escapeHtml(album.title)}</div>
               <div class="text-sm text-gray-400">${escapeHtml(artist)} ${year ? `• ${year}` : ''}</div>
@@ -161,26 +175,26 @@ function displayAlbumResults(albums, artistName = null) {
   `;
 }
 
-async function addAlbumFromSearch(artist, album, albumId, releaseDate) {
+async function addAlbumFromSearch(albumData) {
   if (!app.currentList) {
     showToast('Please select or create a list first', 'error');
     return;
   }
   
   // Check if album already exists
-  const exists = app.lists[app.currentList].data.some(a => a.album_id === albumId);
+  const exists = app.lists[app.currentList].data.some(a => a.album_id === albumData.albumId);
   if (exists) {
     showToast('Album already in list', 'warning');
     return;
   }
   
-  // Create album object
+  // Create album object with artist's country
   const newAlbum = {
-    artist,
-    album,
-    album_id: albumId,
-    release_date: releaseDate,
-    country: '',
+    artist: albumData.artist,
+    album: albumData.album,
+    album_id: albumData.albumId,
+    release_date: albumData.releaseDate,
+    country: albumData.country, // Now includes the artist's country
     genre_1: '',
     genre_2: '',
     comments: '',
@@ -196,14 +210,15 @@ async function addAlbumFromSearch(artist, album, albumId, releaseDate) {
   displayAlbums();
   
   // Try to fetch cover art
-  fetchCoverArt(artist, album, albumId);
+  fetchCoverArt(albumData.artist, albumData.album, albumData.albumId);
   
   showToast('Album added successfully', 'success');
   logActivity('album_added', { 
     method: 'search',
-    albumId,
-    artist,
-    album,
+    albumId: albumData.albumId,
+    artist: albumData.artist,
+    album: albumData.album,
+    country: albumData.country,
     listName: app.currentList
   });
   
@@ -515,4 +530,5 @@ function clearSearchForm() {
   albumResults.innerHTML = '';
   searchResults.classList.add('hidden');
   selectedArtistId = null;
+  selectedArtistCountry = null;
 }

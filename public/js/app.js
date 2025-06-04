@@ -239,45 +239,6 @@ function createAlbumItem(album, index) {
   `;
 }
 
-// Create album card for mobile
-function createAlbumCard(album, index) {
-  return `
-    <div class="album-card mb-4" data-index="${index}">
-      <div class="flex gap-4">
-        <div class="flex-shrink-0">
-          <div class="w-20 h-20 bg-gray-700 rounded overflow-hidden">
-            ${album.cover_image ? 
-              `<img class="album-cover w-full h-full object-cover" data-src="${album.cover_image}" alt="Cover">` :
-              `<div class="w-full h-full flex items-center justify-center text-gray-500">
-                <i class="fas fa-compact-disc text-3xl"></i>
-              </div>`
-            }
-          </div>
-        </div>
-        <div class="flex-grow">
-          <h3 class="font-semibold text-lg">${escapeHtml(album.album)}</h3>
-          <p class="text-gray-400">${escapeHtml(album.artist)}</p>
-          <div class="mt-2 text-sm text-gray-500">
-            ${album.country ? `<span class="mr-3"><i class="fas fa-globe mr-1"></i>${escapeHtml(album.country)}</span>` : ''}
-            ${album.genre_1 ? `<span><i class="fas fa-music mr-1"></i>${escapeHtml(album.genre_1)}</span>` : ''}
-          </div>
-        </div>
-        <div class="flex-shrink-0">
-          <button class="text-gray-400 hover:text-white" onclick="showAlbumMenu(event, ${index})">
-            <i class="fas fa-ellipsis-v"></i>
-          </button>
-        </div>
-      </div>
-      ${album.comments ? `
-        <div class="mt-3 text-sm text-gray-400">
-          <i class="fas fa-comment mr-1"></i>
-          ${escapeHtml(album.comments)}
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
 // Save current list
 async function saveCurrentList() {
   if (!app.currentList || !app.lists[app.currentList]) return;
@@ -478,19 +439,6 @@ async function checkAdminStatus() {
   } catch (error) {
     console.error('Admin status check error:', error);
   }
-}
-
-// Initialize other components...
-function initializeTooltips() {
-  // Tooltips implementation
-}
-
-function initializeSearch() {
-  // Search implementation (see albums.js)
-}
-
-function initializeContextMenus() {
-  // Context menu implementation (see lists.js)
 }
 
 function initializeMobileMenu() {

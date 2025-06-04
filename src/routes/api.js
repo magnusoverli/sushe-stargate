@@ -9,18 +9,6 @@ const { searchArtist, searchAlbumsByArtist, searchAlbumsDirect } = require('../s
 const { fetchCoverArt } = require('../services/coverArt');
 const { generateAlbumId } = require('../utils/helpers');
 
-// Configure multer for cover uploads
-const upload = multer({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
-
 // Get all lists for user
 router.get('/lists', ensureAuthenticated, async (req, res) => {
   try {

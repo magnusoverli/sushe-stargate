@@ -11,6 +11,8 @@ const manualEntryForm = document.getElementById('manual-entry-form');
 let currentSearchMode = 'artist';
 let selectedArtistId = null;
 let selectedArtistCountry = null; // Store the selected artist's country
+let searchCoverObserver = null;
+const searchCoverCache = new Map();
 
 // Toggle search mode
 searchModeToggle?.addEventListener('click', () => {
@@ -151,9 +153,9 @@ function displayAlbumResults(albums, artistName = null) {
         const artist = artistName || album['artist-credit']?.[0]?.name || 'Unknown Artist';
         const releaseDate = album['first-release-date'] || '';
         const year = releaseDate.split('-')[0];
-        
+
         return `
-          <div class="p-3 hover:bg-gray-700 cursor-pointer rounded flex justify-between items-center" 
+          <div class="p-3 hover:bg-gray-700 cursor-pointer rounded flex justify-between items-center"
                onclick='addAlbumFromSearch(${JSON.stringify({
                  artist,
                  album: album.title,
@@ -161,9 +163,14 @@ function displayAlbumResults(albums, artistName = null) {
                  releaseDate,
                  country: selectedArtistCountry || ''
                }).replace(/'/g, '&apos;')})'>
-            <div>
-              <div class="font-medium">${escapeHtml(album.title)}</div>
-              <div class="text-sm text-gray-400">${escapeHtml(artist)} ${year ? `• ${year}` : ''}</div>
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                <img class="search-album-cover w-full h-full object-cover" data-artist="${escapeHtml(artist)}" data-album="${escapeHtml(album.title)}" data-mbid="${album.id}" alt="cover">
+              </div>
+              <div>
+                <div class="font-medium">${escapeHtml(album.title)}</div>
+                <div class="text-sm text-gray-400">${escapeHtml(artist)} ${year ? `• ${year}` : ''}</div>
+              </div>
             </div>
             <button class="text-accent hover:text-accent-hover">
               <i class="fas fa-plus"></i>
@@ -173,6 +180,8 @@ function displayAlbumResults(albums, artistName = null) {
       }).join('')}
     </div>
   `;
+
+  loadSearchCoverImages();
 }
 
 async function addAlbumFromSearch(albumData) {
@@ -531,4 +540,53 @@ function clearSearchForm() {
   searchResults.classList.add('hidden');
   selectedArtistId = null;
   selectedArtistCountry = null;
+}
+
+function initializeSearchCoverObserver() {
+  if (searchCoverObserver) return;
+  searchCoverObserver = new IntersectionObserver(async (entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const mbid = img.dataset.mbid;
+        if (searchCoverCache.has(mbid)) {
+          img.src = searchCoverCache.get(mbid);
+          img.classList.add('loaded');
+        } else {
+          const base64 = await fetchSearchCover(img.dataset.artist, img.dataset.album, mbid);
+          if (base64) {
+            searchCoverCache.set(mbid, base64);
+            img.src = base64;
+            img.onload = () => img.classList.add('loaded');
+          }
+        }
+        searchCoverObserver.unobserve(img);
+      }
+    }
+  }, { rootMargin: '100px 0px', threshold: 0.01 });
+}
+
+function loadSearchCoverImages() {
+  initializeSearchCoverObserver();
+  document.querySelectorAll('.search-album-cover').forEach(img => {
+    if (!img.dataset.mbid) return;
+    searchCoverObserver.observe(img);
+  });
+}
+
+async function fetchSearchCover(artist, album, mbid) {
+  try {
+    const response = await fetch('/api/cover-art', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artist, album, mbid })
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return await urlToBase64(data.url);
+    }
+  } catch (err) {
+    console.error('Search cover fetch error:', err);
+  }
+  return null;
 }

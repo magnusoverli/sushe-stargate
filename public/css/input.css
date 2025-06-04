@@ -51,7 +51,7 @@
   .album-item {
     @apply bg-gray-800 rounded-lg p-4 lg:p-0 lg:rounded-none lg:bg-transparent;
     @apply lg:grid lg:grid-cols-[3rem_5rem_1fr_1fr_8rem_8rem_8rem_1fr] lg:gap-4 lg:px-4 lg:py-3 lg:border-b lg:border-gray-700 lg:hover:bg-gray-800;
-    @apply relative;
+    @apply relative transition-colors duration-200;
   }
   
   .album-num {
@@ -93,7 +93,7 @@
   }
   
   .album-menu-btn {
-    @apply absolute top-4 right-4 text-gray-400 hover:text-white;
+    @apply absolute top-4 right-4 text-gray-400 hover:text-white transition-colors duration-200;
   }
   
   .album-comment-mobile {
@@ -103,13 +103,15 @@
   /* Glow effect */
   .glow {
     box-shadow: 0 0 20px var(--accent-color-shadow);
+    transition: box-shadow 0.3s ease;
   }
 
   .glow-text {
     text-shadow: 0 0 10px var(--accent-color-shadow);
+    transition: text-shadow 0.3s ease;
   }
 
-  /* Button styles */
+  /* Button styles - all using accent colors */
   .btn-primary {
     @apply bg-accent hover:bg-accent-hover text-white font-semibold py-2 px-4 rounded transition-all duration-200;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -119,13 +121,32 @@
     box-shadow: 0 0 20px var(--accent-color-shadow);
   }
 
+  .btn-primary:active {
+    @apply bg-accent-dark;
+  }
+
   .btn-secondary {
     @apply bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded transition-all duration-200;
   }
 
-  /* Input styles */
+  /* New accent button variants */
+  .btn-accent-outline {
+    @apply border-2 border-accent text-accent hover:bg-accent hover:text-white font-semibold py-2 px-4 rounded transition-all duration-200;
+  }
+
+  .btn-accent-ghost {
+    @apply text-accent hover:bg-accent hover:bg-opacity-10 font-semibold py-2 px-4 rounded transition-all duration-200;
+  }
+
+  /* Small accent buttons (for admin panel, etc) */
+  .btn-accent-sm {
+    @apply bg-accent hover:bg-accent-hover text-white text-xs px-2 py-1 rounded transition-all duration-200;
+  }
+
+  /* Input styles with accent focus */
   .input-dark {
-    @apply bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+    @apply bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white transition-all duration-200;
+    @apply focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
   }
 
   /* Modal styles */
@@ -164,13 +185,17 @@
     @apply bg-gray-800 rounded-lg p-4 shadow-lg;
   }
 
-  /* Context menu */
+  /* Context menu with accent hover */
   .context-menu {
     @apply absolute bg-gray-800 rounded-lg shadow-xl py-2 z-50 min-w-[200px];
   }
 
   .context-menu-item {
-    @apply px-4 py-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2;
+    @apply px-4 py-2 cursor-pointer flex items-center gap-2 transition-colors duration-200;
+  }
+
+  .context-menu-item:hover {
+    @apply bg-accent bg-opacity-20 text-accent-light;
   }
 
   /* Toast notifications */
@@ -190,14 +215,78 @@
     @apply border-l-4 border-yellow-500;
   }
 
-  /* Floating Action Button */
+  /* Floating Action Button with accent */
   .fab {
-    @apply fixed bottom-6 right-6 w-14 h-14 bg-accent hover:bg-accent-hover rounded-full shadow-lg flex items-center justify-center text-white z-30 transition-all duration-200;
+    @apply fixed bottom-6 right-6 w-14 h-14 bg-accent hover:bg-accent-hover rounded-full shadow-lg;
+    @apply flex items-center justify-center text-white z-30 transition-all duration-200;
   }
 
   .fab:hover {
     transform: scale(1.1);
     box-shadow: 0 0 20px var(--accent-color-shadow);
+  }
+
+  .fab:active {
+    @apply bg-accent-dark;
+    transform: scale(0.95);
+  }
+
+  /* List items with accent hover */
+  .list-item {
+    @apply w-full text-left px-4 py-2 rounded flex justify-between items-center transition-all duration-200;
+  }
+
+  .list-item:hover {
+    @apply bg-accent bg-opacity-10;
+  }
+
+  .list-item.active {
+    @apply bg-accent bg-opacity-20;
+  }
+
+  /* Links with accent color */
+  .link-accent {
+    @apply text-accent hover:text-accent-hover transition-colors duration-200;
+  }
+
+  /* Checkboxes and radio buttons with accent */
+  input[type="checkbox"]:checked,
+  input[type="radio"]:checked {
+    @apply bg-accent border-accent;
+  }
+
+  /* Focus states with accent */
+  .focus-accent:focus {
+    @apply outline-none ring-2 ring-accent ring-opacity-50;
+  }
+
+  /* Editable fields with accent hover */
+  .editable-field {
+    @apply cursor-pointer px-2 py-1 rounded transition-colors duration-200;
+  }
+
+  .editable-field:hover {
+    @apply bg-accent bg-opacity-10;
+  }
+
+  /* Progress bars with accent */
+  .progress-accent {
+    @apply bg-accent;
+  }
+
+  /* Badges with accent */
+  .badge-accent {
+    @apply bg-accent text-white px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  /* Dividers with accent */
+  .divider-accent {
+    @apply border-accent;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-accent bg-opacity-30 text-white;
   }
 }
 
@@ -217,5 +306,71 @@
 
   .safe-right {
     padding-right: env(safe-area-inset-right);
+  }
+
+  /* Transition utilities for theme changes */
+  .transition-theme {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+
+  /* Accent text utilities */
+  .text-accent {
+    color: var(--accent-color);
+  }
+
+  .text-accent-hover {
+    color: var(--accent-color-hover);
+  }
+
+  .text-accent-light {
+    color: var(--accent-color-light);
+  }
+
+  .text-accent-dark {
+    color: var(--accent-color-dark);
+  }
+
+  /* Accent background utilities */
+  .bg-accent {
+    background-color: var(--accent-color);
+  }
+
+  .bg-accent-hover {
+    background-color: var(--accent-color-hover);
+  }
+
+  .bg-accent-light {
+    background-color: var(--accent-color-light);
+  }
+
+  .bg-accent-dark {
+    background-color: var(--accent-color-dark);
+  }
+
+  /* Accent border utilities */
+  .border-accent {
+    border-color: var(--accent-color);
+  }
+
+  .border-accent-hover {
+    border-color: var(--accent-color-hover);
+  }
+
+  .border-accent-light {
+    border-color: var(--accent-color-light);
+  }
+
+  .border-accent-dark {
+    border-color: var(--accent-color-dark);
+  }
+
+  /* Ring utilities with accent */
+  .ring-accent {
+    --tw-ring-color: var(--accent-color);
+  }
+
+  /* Shadow utilities with accent */
+  .shadow-accent {
+    box-shadow: 0 0 20px var(--accent-color-shadow);
   }
 }

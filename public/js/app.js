@@ -34,32 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Apply user's accent color theme
 function applyUserTheme() {
-  const accentColor = document.querySelector('meta[name="user-accent-color"]')?.content || '#dc2626';
-  
-  // Convert hex to RGB for calculations
-  const hex2rgb = hex => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  };
-  
-  const rgb = hex2rgb(accentColor);
-  if (rgb) {
-    // Calculate variations
-    const hover = `#${Math.min(255, rgb.r + 30).toString(16).padStart(2, '0')}${Math.min(255, rgb.g + 30).toString(16).padStart(2, '0')}${Math.min(255, rgb.b + 30).toString(16).padStart(2, '0')}`;
-    const light = `#${Math.min(255, rgb.r + 100).toString(16).padStart(2, '0')}${Math.min(255, rgb.g + 100).toString(16).padStart(2, '0')}${Math.min(255, rgb.b + 100).toString(16).padStart(2, '0')}`;
-    const dark = `#${Math.max(0, rgb.r - 50).toString(16).padStart(2, '0')}${Math.max(0, rgb.g - 50).toString(16).padStart(2, '0')}${Math.max(0, rgb.b - 50).toString(16).padStart(2, '0')}`;
-    
-    // Apply to CSS variables
-    document.documentElement.style.setProperty('--accent-color', accentColor);
-    document.documentElement.style.setProperty('--accent-color-hover', hover);
-    document.documentElement.style.setProperty('--accent-color-light', light);
-    document.documentElement.style.setProperty('--accent-color-dark', dark);
-    document.documentElement.style.setProperty('--accent-color-shadow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`);
-  }
+  // This is now handled in the layout file, but we can keep this 
+  // function for compatibility or additional theme-related setup
+  console.log('Theme applied from layout');
 }
 
 // Load user lists
@@ -105,14 +82,6 @@ function updateListsUI() {
   `).join('');
   
   container.innerHTML = listsHTML;
-  
-  // Update list selector in add album modal
-  const listSelector = document.getElementById('list-selector');
-  if (listSelector) {
-    listSelector.innerHTML = Object.keys(app.lists).map(name => `
-      <option value="${name}" ${app.currentList === name ? 'selected' : ''}>${escapeHtml(name)}</option>
-    `).join('');
-  }
 }
 
 // Select a list

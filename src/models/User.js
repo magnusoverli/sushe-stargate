@@ -84,7 +84,10 @@ class User {
       WHERE email = ?
     `);
     
-    stmt.run(token, expires, new Date().toISOString(), email.toLowerCase());
+    // Convert expires to ISO string if it's a Date object
+    const expiresStr = expires instanceof Date ? expires.toISOString() : expires;
+    
+    stmt.run(token, expiresStr, new Date().toISOString(), email.toLowerCase());
     return this.findByEmail(email);
   }
 }

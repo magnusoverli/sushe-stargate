@@ -1,13 +1,13 @@
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
+const SQLiteStore = require('connect-sqlite3')(session);
 const path = require('path');
 
 const sessionConfig = {
-  store: new FileStore({
-    path: path.join(process.env.DATA_DIR || './data', 'sessions'),
-    ttl: 86400, // 24 hours
-    retries: 0,
-    secret: process.env.SESSION_SECRET
+  store: new SQLiteStore({
+    db: 'sessions.db',
+    dir: process.env.DATA_DIR || './data',
+    table: 'sessions',
+    concurrentDB: true
   }),
   secret: process.env.SESSION_SECRET || 'default-secret-change-this',
   resave: false,

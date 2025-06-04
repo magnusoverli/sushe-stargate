@@ -1,6 +1,10 @@
 const https = require('https');
 const http = require('http');
 
+// Keep connections alive
+const httpsAgent = new https.Agent({ keepAlive: true });
+const httpAgent = new http.Agent({ keepAlive: true });
+
 // iTunes Search API
 const searchiTunes = (artist, album) => {
   return new Promise((resolve, reject) => {
@@ -11,7 +15,8 @@ const searchiTunes = (artist, album) => {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
-      }
+      },
+      agent: httpsAgent
     };
 
     const req = https.request(options, (res) => {
@@ -53,7 +58,8 @@ const searchDeezer = (artist, album) => {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
-      }
+      },
+      agent: httpsAgent
     };
 
     const req = https.request(options, (res) => {
@@ -91,7 +97,8 @@ const searchCoverArtArchive = (mbid) => {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
-      }
+      },
+      agent: httpAgent
     };
 
     const req = http.request(options, (res) => {

@@ -1,5 +1,8 @@
 const https = require('https');
 
+// Reuse connections
+const httpsAgent = new https.Agent({ keepAlive: true });
+
 const USER_AGENT = 'SuShe-Stargate/1.0.0 (https://github.com/yourusername/sushe-stargate)';
 
 const searchMusicBrainz = (query, type = 'release-group') => {
@@ -12,7 +15,8 @@ const searchMusicBrainz = (query, type = 'release-group') => {
       headers: {
         'User-Agent': USER_AGENT,
         'Accept': 'application/json'
-      }
+      },
+      agent: httpsAgent
     };
 
     const req = https.request(options, (res) => {

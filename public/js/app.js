@@ -40,6 +40,43 @@ function applyUserTheme() {
   console.log('Theme applied from layout');
 }
 
+function isMobileDevice() {
+  // Check for touch support
+  const hasTouch = ('ontouchstart' in window) || 
+                   (navigator.maxTouchPoints > 0) || 
+                   (navigator.msMaxTouchPoints > 0);
+  
+  // Check for Web Share API
+  const hasShareAPI = 'share' in navigator;
+  
+  // Check if can share files (this might fail on Firefox iOS)
+  let canShareFiles = false;
+  if (hasShareAPI && navigator.canShare) {
+    try {
+      // Test with a dummy file
+      const testFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+      canShareFiles = navigator.canShare({ files: [testFile] });
+    } catch (e) {
+      console.log('canShare test failed:', e);
+    }
+  }
+  
+  // Additional mobile indicators
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  console.log('Mobile detection:', {
+    hasTouch,
+    hasShareAPI,
+    canShareFiles,
+    isMobileUA,
+    isIOS,
+    userAgent: navigator.userAgent
+  });
+  
+  // For iOS, we'll consider it mobile if it has touch, regardless of share API
+  return hasTouch && (isMobileUA || isIOS);
+}
 // Load user lists
 async function loadUserLists() {
   try {
@@ -670,7 +707,6 @@ function initializeModals() {
 }
 
 // Setup event listeners
-// Setup event listeners
 function setupEventListeners() {
   // Create list button
   document.getElementById('create-list-btn')?.addEventListener('click', () => {
@@ -689,7 +725,16 @@ function setupEventListeners() {
   });
   
   // Export button
-  document.getElementById('export-btn')?.addEventListener('click', exportCurrentList);
+  const exportBtn = document.getElementById('export-btn');
+  if (exportBtn) {
+    // Add click listener
+    exportBtn.addEventListener('click', exportCurrentList);
+    
+    // Update text/icon for mobile devices
+    if (isMobileDevice()) {
+      exportBtn.innerHTML = '<i class="fas fa-share mr-2"></i>Share List';
+    }
+  }
   
   // Settings button
   document.getElementById('settings-btn')?.addEventListener('click', () => {

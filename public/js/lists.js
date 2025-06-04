@@ -54,15 +54,15 @@ function showListContextMenu(event, listName) {
   const menu = document.createElement('div');
   menu.className = 'context-menu';
   menu.innerHTML = `
-    <div class="context-menu-item" onclick="renameList('${listName}')">
+    <div class="context-menu-item" onclick="closeMenuAndExecute(() => renameList('${listName}'))">
       <i class="fas fa-edit"></i>
       <span>Rename</span>
     </div>
-    <div class="context-menu-item" onclick="exportList('${listName}')">
+    <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
       <i class="fas fa-download"></i>
       <span>Export</span>
     </div>
-    <div class="context-menu-item text-red-400" onclick="deleteList('${listName}')">
+    <div class="context-menu-item text-red-400" onclick="closeMenuAndExecute(() => deleteList('${listName}'))">
       <i class="fas fa-trash"></i>
       <span>Delete</span>
     </div>
@@ -89,6 +89,14 @@ function showListContextMenu(event, listName) {
   setTimeout(() => {
     document.addEventListener('click', closeMenu);
   }, 0);
+}
+
+// Helper function to close menu and execute action
+function closeMenuAndExecute(action) {
+  // Remove all context menus
+  document.querySelectorAll('.context-menu').forEach(menu => menu.remove());
+  // Execute the action
+  action();
 }
 
 // Rename list
@@ -304,11 +312,22 @@ function closeImportModal() {
 }
 
 async function createImportedList(listName, data) {
-  // Create list with imported data
+  // Transform cover images to ensure they have data URI prefix
+  const transformedData = data.map(album => {
+    if (album.cover_image && !album.cover_image.startsWith('data:')) {
+      // Determine the image format, defaulting to JPEG if not specified
+      const format = (album.cover_image_format || 'JPEG').toLowerCase();
+      // Add the data URI prefix
+      album.cover_image = `data:image/${format};base64,${album.cover_image}`;
+    }
+    return album;
+  });
+  
+  // Create list with transformed data
   const response = await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data })
+    body: JSON.stringify({ data: transformedData })
   });
   
   if (!response.ok) {
@@ -318,7 +337,7 @@ async function createImportedList(listName, data) {
   const list = await response.json();
   app.lists[listName] = {
     ...list,
-    data // Ensure we have the imported data
+    data: transformedData // Use the transformed data with fixed cover images
   };
   
   // Update UI and select the new list
@@ -327,7 +346,7 @@ async function createImportedList(listName, data) {
   
   logActivity('list_imported', { 
     listName, 
-    albumCount: data.length,
+    albumCount: transformedData.length,
     mode: 'new'
   });
 }
@@ -395,28 +414,41 @@ async function handleImportConflict(listName, mode) {
     conflictModal.remove();
   }
   
+  // Transform cover images to ensure they have data URI prefix
+  const transformData = (albums) => {
+    return albums.map(album => {
+      if (album.cover_image && !album.cover_image.startsWith('data:')) {
+        const format = (album.cover_image_format || 'JPEG').toLowerCase();
+        album.cover_image = `data:image/${format};base64,${album.cover_image}`;
+      }
+      return album;
+    });
+  };
+  
   try {
     if (mode === 'overwrite') {
-      // Replace existing list
-      app.lists[listName].data = data;
+      // Replace existing list with transformed data
+      const transformedData = transformData(data);
+      app.lists[listName].data = transformedData;
       
       await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data })
+        body: JSON.stringify({ data: transformedData })
       });
       
       logActivity('list_imported', { 
         listName, 
-        albumCount: data.length,
+        albumCount: transformedData.length,
         mode: 'overwrite'
       });
       
     } else if (mode === 'merge') {
-      // Merge with existing
+      // Merge with existing, transforming new albums
       const existingData = app.lists[listName].data || [];
       const existingIds = new Set(existingData.map(a => a.album_id));
-      const newAlbums = data.filter(a => !existingIds.has(a.album_id));
+      const transformedNewData = transformData(data);
+      const newAlbums = transformedNewData.filter(a => !existingIds.has(a.album_id));
       app.lists[listName].data = [...existingData, ...newAlbums];
       
       await fetch(`/api/lists/${encodeURIComponent(listName)}`, {
@@ -450,6 +482,7 @@ async function handleImportConflict(listName, mode) {
         return;
       }
       
+      // Use the existing createImportedList which already has the transformation
       await createImportedList(newName, data);
       
       // Clean up
@@ -494,3 +527,4 @@ function handleImportCancel() {
 // Make functions globally available
 window.handleImportConflict = handleImportConflict;
 window.handleImportCancel = handleImportCancel;
+window.closeMenuAndExecute = closeMenuAndExecute;

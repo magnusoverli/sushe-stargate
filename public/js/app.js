@@ -194,27 +194,31 @@ function initializeSortable() {
     app.sortable = null;
   }
   
+  // Detect if we're on desktop
+  const isDesktop = window.innerWidth >= 1024; // lg breakpoint
+  
   // Configure SortableJS with better iOS support
   app.sortable = Sortable.create(sortableContainer, {
     animation: 150,
-    delay: 300, // Reduced from 500ms for better responsiveness
+    delay: 300,
     delayOnTouchOnly: true,
-    touchStartThreshold: 10, // Increased threshold to prevent accidental drags
+    touchStartThreshold: 10,
     
     // Critical iOS settings
-    forceFallback: true, // Always use fallback for consistency
-    fallbackTolerance: 5, // Add tolerance for touch
+    forceFallback: true,
+    fallbackTolerance: 5,
     
     ghostClass: 'sortable-ghost',
     dragClass: 'sortable-drag',
     chosenClass: 'sortable-chosen',
     fallbackClass: 'sortable-fallback',
     
-    // Important: Don't append to body on iOS as it can cause issues
     fallbackOnBody: false,
     
-    swapThreshold: 0.65,
-    invertSwap: true, // Add this for better touch behavior
+    // Adjust swap threshold based on device
+    swapThreshold: isDesktop ? 0.55 : 0.65,
+    invertSwap: true,
+    /*emptyInsertThreshold: 0,*/
     
     draggable: '.album-item',
     filter: '.album-menu-btn, .editable-field, input, button, a',
@@ -244,7 +248,7 @@ function initializeSortable() {
       
       // Add dragging class
       scrollContainer.classList.add('is-dragging');
-      evt.item.style.opacity = '0.4'; // Visual feedback
+      evt.item.style.opacity = '0.0'; // Visual feedback
       
       // Create scroll zone indicators
       createScrollZones();

@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev for build)
+RUN npm ci
 
 # Copy application files
 COPY . .
@@ -27,17 +27,23 @@ RUN apk add --no-cache dumb-init
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Copy from builder
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+# Copy from builder - only production dependencies
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+
+# Install only production dependencies
+RUN npm ci --omit=dev && \
+    npm cache clean --force
+
+# Copy application files
 COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 COPY --from=builder --chown=nodejs:nodejs /app/views ./views
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/countries.txt ./
 COPY --from=builder --chown=nodejs:nodejs /app/genres.txt ./
 
-# Create data directory
-RUN mkdir -p /app/data && chown -R nodejs:nodejs /app/data
+# Create data directory with proper permissions
+RUN mkdir -p /app/data && \
+    chown -R nodejs:nodejs /app/data
 
 # Switch to non-root user
 USER nodejs
@@ -45,9 +51,9 @@ USER nodejs
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
+# Health check with proper timeout and retries
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/auth/login', (res) => process.exit(res.statusCode === 200 || res.statusCode === 302 ? 0 : 1))"
 
 # Set environment
 ENV NODE_ENV=production

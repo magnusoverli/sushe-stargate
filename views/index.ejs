@@ -1,12 +1,6 @@
-
 <div class="flex h-screen overflow-hidden">
-  <!-- Desktop Sidebar -->
-  <aside id="desktop-sidebar" class="hidden lg:flex flex-col w-64 bg-gray-900 border-r border-gray-800">
-    <%- include('partials/sidebar') %>
-  </aside>
-  
-  <!-- Mobile Sidebar -->
-  <aside id="mobile-sidebar" class="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 transform -translate-x-full transition-transform duration-300">
+  <!-- Single Sidebar for both mobile and desktop -->
+  <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 z-40 w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
     <%- include('partials/sidebar') %>
   </aside>
   

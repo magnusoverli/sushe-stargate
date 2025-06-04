@@ -211,20 +211,18 @@ function initializeUserSearch() {
   const searchInput = document.getElementById('user-search');
   if (!searchInput) return;
   
+  let debounceTimer;
   searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('#users-table tbody tr');
-    
-    rows.forEach(row => {
-      const email = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-      const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const query = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('#users-table tbody tr');
       
-      if (email.includes(query) || username.includes(query)) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
+      rows.forEach(row => {
+        const searchText = row.textContent.toLowerCase();
+        row.style.display = searchText.includes(query) ? '' : 'none';
+      });
+    }, 300);
   });
 }
 

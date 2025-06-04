@@ -94,8 +94,7 @@ async function loadUserLists() {
 
 // Update lists UI
 function updateListsUI() {
-  const desktop = document.getElementById('desktop-lists');
-  const mobile = document.getElementById('mobile-lists');
+  const container = document.getElementById('lists-container');
   
   const listsHTML = Object.keys(app.lists).map(name => `
     <button class="list-item w-full text-left px-4 py-2 hover:bg-gray-700 rounded flex justify-between items-center group ${app.currentList === name ? 'bg-gray-700' : ''}"
@@ -108,8 +107,7 @@ function updateListsUI() {
     </button>
   `).join('');
   
-  if (desktop) desktop.innerHTML = listsHTML;
-  if (mobile) mobile.innerHTML = listsHTML;
+  container.innerHTML = listsHTML;
   
   // Update list selector in add album modal
   const listSelector = document.getElementById('list-selector');
@@ -169,89 +167,75 @@ function displayAlbums() {
     return;
   }
   
-  // Check if mobile
-  const isMobile = window.innerWidth < 1024;
+  // Use responsive grid that becomes table-like on desktop
+  container.innerHTML = `
+    <div class="album-responsive-container">
+      <div class="hidden lg:grid album-header">
+        <div class="col-num">#</div>
+        <div class="col-cover">Cover</div>
+        <div class="col-album">Album</div>
+        <div class="col-artist">Artist</div>
+        <div class="col-country">Country</div>
+        <div class="col-genre1">Genre 1</div>
+        <div class="col-genre2">Genre 2</div>
+        <div class="col-comment">Comment</div>
+      </div>
+      ${albums.map((album, index) => createAlbumItem(album, index)).join('')}
+    </div>
+  `;
   
-  if (isMobile) {
-    // Mobile card layout
-    container.innerHTML = albums.map((album, index) => createAlbumCard(album, index)).join('');
-  } else {
-    // Desktop table layout
-    container.innerHTML = `
-      <table class="table-dark">
-        <thead>
-          <tr>
-            <th class="w-12">#</th>
-            <th class="w-20">Cover</th>
-            <th>Album</th>
-            <th>Artist</th>
-            <th class="w-32">Country</th>
-            <th class="w-32">Genre 1</th>
-            <th class="w-32">Genre 2</th>
-            <th>Comment</th>
-          </tr>
-        </thead>
-        <tbody id="album-list">
-          ${albums.map((album, index) => createAlbumRow(album, index)).join('')}
-        </tbody>
-      </table>
-    `;
-  }
-  
-  // Load cover images
   loadVisibleCovers();
 }
 
-// Create album row for desktop
-function createAlbumRow(album, index) {
+function createAlbumItem(album, index) {
   return `
-    <tr class="album-row" data-index="${index}">
-      <td class="font-medium">${index + 1}</td>
-      <td>
-        <div class="w-16 h-16 bg-gray-700 rounded overflow-hidden">
-          ${album.cover_image ? 
-            `<img class="album-cover w-full h-full object-cover" data-src="${album.cover_image}" alt="Cover">` :
-            `<div class="w-full h-full flex items-center justify-center text-gray-500">
-              <i class="fas fa-compact-disc text-2xl"></i>
-            </div>`
-          }
+    <div class="album-item" data-index="${index}">
+      <div class="album-num hidden lg:block">${index + 1}</div>
+      
+      <div class="album-cover-container">
+        ${album.cover_image ? 
+          `<img class="album-cover" data-src="${album.cover_image}" alt="Cover">` :
+          `<div class="album-cover-placeholder">
+            <i class="fas fa-compact-disc"></i>
+          </div>`
+        }
+      </div>
+      
+      <div class="album-info">
+        <div class="album-title">${escapeHtml(album.album)}</div>
+        <div class="album-artist">${escapeHtml(album.artist)}</div>
+        <div class="album-meta lg:hidden">
+          ${album.country ? `<span><i class="fas fa-globe"></i>${escapeHtml(album.country)}</span>` : ''}
+          ${album.genre_1 ? `<span><i class="fas fa-music"></i>${escapeHtml(album.genre_1)}</span>` : ''}
         </div>
-      </td>
-      <td class="font-medium">${escapeHtml(album.album)}</td>
-      <td>${escapeHtml(album.artist)}</td>
-      <td>
-        <span class="editable-field cursor-pointer hover:bg-gray-700 px-2 py-1 rounded" 
-              data-field="country" 
-              data-index="${index}"
-              onclick="editField(this)">
+      </div>
+      
+      <div class="album-fields hidden lg:contents">
+        <div class="editable-field" data-field="country" data-index="${index}" onclick="editField(this)">
           ${escapeHtml(album.country || '-')}
-        </span>
-      </td>
-      <td>
-        <span class="editable-field cursor-pointer hover:bg-gray-700 px-2 py-1 rounded" 
-              data-field="genre_1" 
-              data-index="${index}"
-              onclick="editField(this)">
+        </div>
+        <div class="editable-field" data-field="genre_1" data-index="${index}" onclick="editField(this)">
           ${escapeHtml(album.genre_1 || '-')}
-        </span>
-      </td>
-      <td>
-        <span class="editable-field cursor-pointer hover:bg-gray-700 px-2 py-1 rounded" 
-              data-field="genre_2" 
-              data-index="${index}"
-              onclick="editField(this)">
+        </div>
+        <div class="editable-field" data-field="genre_2" data-index="${index}" onclick="editField(this)">
           ${escapeHtml(album.genre_2 || '-')}
-        </span>
-      </td>
-      <td>
-        <span class="editable-field cursor-pointer hover:bg-gray-700 px-2 py-1 rounded" 
-              data-field="comments" 
-              data-index="${index}"
-              onclick="editField(this)">
+        </div>
+        <div class="editable-field" data-field="comments" data-index="${index}" onclick="editField(this)">
           ${escapeHtml(album.comments || '-')}
-        </span>
-      </td>
-    </tr>
+        </div>
+      </div>
+      
+      <button class="album-menu-btn lg:hidden" onclick="showAlbumMenu(event, ${index})">
+        <i class="fas fa-ellipsis-v"></i>
+      </button>
+      
+      ${album.comments && album.comments.trim() ? `
+        <div class="album-comment-mobile lg:hidden">
+          <i class="fas fa-comment"></i>
+          ${escapeHtml(album.comments)}
+        </div>
+      ` : ''}
+    </div>
   `;
 }
 
@@ -510,20 +494,33 @@ function initializeContextMenus() {
 }
 
 function initializeMobileMenu() {
-  // Mobile menu implementation
   const hamburger = document.getElementById('mobile-menu-btn');
-  const sidebar = document.getElementById('mobile-sidebar');
+  const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('mobile-overlay');
   
-  hamburger?.addEventListener('click', () => {
-    sidebar.classList.toggle('-translate-x-full');
-    overlay.classList.toggle('hidden');
-  });
+  const toggleSidebar = (show) => {
+    if (show) {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+  };
   
-  overlay?.addEventListener('click', () => {
-    sidebar.classList.add('-translate-x-full');
-    overlay.classList.add('hidden');
-  });
+  hamburger?.addEventListener('click', () => toggleSidebar(true));
+  overlay?.addEventListener('click', () => toggleSidebar(false));
+  
+  // Close sidebar on list selection on mobile
+  if (window.innerWidth < 1024) {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.list-item')) {
+        setTimeout(() => toggleSidebar(false), 100);
+      }
+    });
+  }
 }
 
 function initializeIntersectionObserver() {

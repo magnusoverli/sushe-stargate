@@ -318,53 +318,14 @@ async function fetchCoverArt(artist, album, mbid) {
 
 // Update album cover in UI
 function updateAlbumCover(index, base64) {
-  const row = document.querySelector(`tr[data-index="${index}"]`);
-  if (row) {
-    const coverCell = row.querySelector('td:nth-child(2) div');
-    coverCell.innerHTML = `<img class="w-full h-full object-cover" src="${base64}" alt="Cover">`;
-  }
-  
-  const card = document.querySelector(`.album-card[data-index="${index}"]`);
-  if (card) {
-    const coverDiv = card.querySelector('.w-20.h-20');
-    coverDiv.innerHTML = `<img class="w-full h-full object-cover" src="${base64}" alt="Cover">`;
+  const albumElement = document.querySelector(`[data-index="${index}"] .album-cover`);
+  if (albumElement) {
+    albumElement.src = base64;
+    albumElement.classList.add('loaded');
   }
 }
 
-// Helper functions
-function generateAlbumId() {
-  return `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-async function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function urlToBase64(url) {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return fileToBase64(blob);
-  } catch (error) {
-    console.error('URL to base64 error:', error);
-    return null;
-  }
-}
-
-function clearSearchForm() {
-  searchInput.value = '';
-  artistResults.innerHTML = '';
-  albumResults.innerHTML = '';
-  searchResults.classList.add('hidden');
-  selectedArtistId = null;
-}
-
-// Album menu for mobile
+// Unified album menu (works for both mobile and desktop)
 function showAlbumMenu(event, index) {
   event.stopPropagation();
   
@@ -376,7 +337,7 @@ function showAlbumMenu(event, index) {
   const menu = document.createElement('div');
   menu.className = 'context-menu';
   menu.innerHTML = `
-    <div class="context-menu-item" onclick="editAlbum(${index})">
+    <div class="context-menu-item" onclick="showEditModal(${index})">
       <i class="fas fa-edit"></i>
       <span>Edit</span>
     </div>
@@ -399,8 +360,6 @@ function showAlbumMenu(event, index) {
   const closeMenu = (e) => {
     if (!menu.contains(e.target)) {
       menu.remove();
-      document.removeEvent
-
       document.removeEventListener('click', closeMenu);
     }
   };
@@ -410,15 +369,18 @@ function showAlbumMenu(event, index) {
   }, 0);
 }
 
-// Edit album (mobile)
-function editAlbum(index) {
+// Unified edit modal (for mobile menu and can be used for desktop too)
+function showEditModal(index) {
   const album = app.lists[app.currentList].data[index];
+  
+  // Remove existing modals
+  document.querySelectorAll('.edit-modal').forEach(m => m.remove());
   
   // Create edit modal
   const modal = document.createElement('div');
-  modal.className = 'modal fixed inset-0 z-50 flex items-center justify-center p-4';
+  modal.className = 'modal fixed inset-0 z-50 flex items-center justify-center p-4 edit-modal';
   modal.innerHTML = `
-    <div class="modal-backdrop"></div>
+    <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
     <div class="modal-content relative z-10 w-full max-w-md">
       <div class="bg-gray-900 rounded-lg p-6">
         <h3 class="text-xl font-semibold mb-4">Edit Album</h3>
@@ -492,7 +454,7 @@ function editAlbum(index) {
     modal.remove();
     showToast('Album updated', 'success');
     
-    logActivity('album_edited_mobile', {
+    logActivity('album_edited', {
       albumId: album.album_id,
       fields: ['country', 'genre_1', 'genre_2', 'comments']
     });
@@ -520,4 +482,37 @@ async function removeAlbum(index) {
     album: album.album,
     listName: app.currentList
   });
+}
+
+// Helper functions
+function generateAlbumId() {
+  return `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+async function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function urlToBase64(url) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return fileToBase64(blob);
+  } catch (error) {
+    console.error('URL to base64 error:', error);
+    return null;
+  }
+}
+
+function clearSearchForm() {
+  searchInput.value = '';
+  artistResults.innerHTML = '';
+  albumResults.innerHTML = '';
+  searchResults.classList.add('hidden');
+  selectedArtistId = null;
 }

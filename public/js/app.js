@@ -104,10 +104,10 @@ async function selectList(listName) {
   // Display albums
   displayAlbums();
   
-  // Ensure covers are loaded after a small delay
-  setTimeout(() => {
+  // Use requestAnimationFrame to ensure DOM is ready
+  requestAnimationFrame(() => {
     loadVisibleCovers();
-  }, 100);
+  });
   
   // Save preference
   await fetch('/api/user/last-list', {
@@ -155,7 +155,10 @@ function displayAlbums() {
     </div>
   `;
   
-  loadVisibleCovers();
+  // Load covers after next frame to ensure DOM is ready
+  requestAnimationFrame(() => {
+    loadVisibleCovers();
+  });
 }
 
 function createAlbumItem(album, index) {
@@ -365,6 +368,7 @@ function initializeModals() {
 }
 
 // Setup event listeners
+// Setup event listeners
 function setupEventListeners() {
   // Create list button
   document.getElementById('create-list-btn')?.addEventListener('click', () => {
@@ -372,11 +376,9 @@ function setupEventListeners() {
     document.getElementById('new-list-name').focus();
   });
   
-  // Add album buttons (desktop and mobile FAB)
-  ['add-album-btn', 'add-album-fab'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', () => {
-      document.getElementById('add-album-modal').classList.remove('hidden');
-    });
+  // Add album button (FAB only now)
+  document.getElementById('add-album-fab')?.addEventListener('click', () => {
+    document.getElementById('add-album-modal').classList.remove('hidden');
   });
   
   // Import button
@@ -443,34 +445,59 @@ function initializeMobileMenu() {
 }
 
 function initializeIntersectionObserver() {
-  // Lazy loading for images
+  // Lazy loading for images with a larger root margin for better preloading
   app.observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const img = entry.target;
         if (img.dataset.src && !img.src) {
           img.src = img.dataset.src;
-          img.onload = () => img.classList.add('loaded');
-          app.observer.unobserve(img);
+          img.onload = () => {
+            img.classList.add('loaded');
+            app.observer.unobserve(img);
+          };
+          img.onerror = () => {
+            console.error('Failed to load cover image:', img.dataset.src);
+            app.observer.unobserve(img);
+          };
         }
       }
     });
-  }, { rootMargin: '50px' });
+  }, { 
+    rootMargin: '200px 0px', // Increased margin to preload images before they become visible
+    threshold: 0.01 // Trigger as soon as even 1% is visible
+  });
 }
 
 function loadVisibleCovers() {
+  // Ensure observer is initialized
+  if (!app.observer) {
+    initializeIntersectionObserver();
+  }
+  
   document.querySelectorAll('.album-cover[data-src]').forEach(img => {
-    // Check if image is already in viewport
-    const rect = img.getBoundingClientRect();
-    const isVisible = rect.top >= 0 && 
-                     rect.left >= 0 && 
-                     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                     rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+    if (img.src) return; // Skip if already loaded
     
-    if (isVisible && img.dataset.src && !img.src) {
-      // Load immediately if already visible
+    // Check if image is already in viewport with a more generous boundary
+    const rect = img.getBoundingClientRect();
+    const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+    const viewWidth = window.innerWidth || document.documentElement.clientWidth;
+    
+    // Add a buffer zone to preload images that are just outside the viewport
+    const buffer = 100;
+    const isNearViewport = rect.bottom >= -buffer && 
+                          rect.top <= viewHeight + buffer &&
+                          rect.right >= -buffer && 
+                          rect.left <= viewWidth + buffer;
+    
+    if (isNearViewport) {
+      // Load immediately if near or in viewport
       img.src = img.dataset.src;
       img.onload = () => img.classList.add('loaded');
+      img.onerror = () => {
+        console.error('Failed to load cover image:', img.dataset.src);
+        // Optionally set a fallback or remove the image
+      };
     } else {
       // Otherwise observe for lazy loading
       app.observer.observe(img);

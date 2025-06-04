@@ -107,6 +107,8 @@ async function selectList(listName) {
   
   // Use requestAnimationFrame to ensure DOM is ready
   requestAnimationFrame(() => {
+    initializeSortable();
+    setupScrollEdgeDetection(); // Add this
     loadVisibleCovers();
   });
   
@@ -186,16 +188,25 @@ function initializeSortable() {
   // Get all album items
   const albumItems = sortableContainer.querySelectorAll('.album-item');
   
+  // Find the scrollable container (album-container)
+  const scrollContainer = document.getElementById('album-container');
+  
+  // Detect if we're on a touch device
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
   // Configure SortableJS
   app.sortable = Sortable.create(sortableContainer, {
     animation: 150,
     delay: 500, // 500ms delay for touch-and-hold
     delayOnTouchOnly: true,
     touchStartThreshold: 5, // 5px movement threshold
-    forceFallback: false, // Use native drag on desktop
+    forceFallback: isTouchDevice, // Force fallback on touch devices for better compatibility
     ghostClass: 'sortable-ghost',
     dragClass: 'sortable-drag',
     chosenClass: 'sortable-chosen',
+    fallbackClass: 'sortable-fallback', // Add fallback class
+    fallbackOnBody: true, // Append fallback element to body
+    swapThreshold: 0.65, // Threshold for swapping elements
     
     // Filter to only make album-item elements sortable
     draggable: '.album-item',
@@ -204,6 +215,11 @@ function initializeSortable() {
     filter: '.album-menu-btn, .editable-field, input, button, a',
     preventOnFilter: true,
     
+    // Simpler autoscroll configuration
+    scroll: scrollContainer, // Specify the scroll container directly
+    scrollSensitivity: 50, // Pixels from edge to start scrolling
+    scrollSpeed: 10, // Multiplication factor for scroll speed
+    
     // Handle start of drag
     onStart: function(evt) {
       // Add haptic feedback on mobile
@@ -211,8 +227,14 @@ function initializeSortable() {
         navigator.vibrate(10);
       }
       
-      // Prevent scrolling while dragging
-      document.body.style.overflow = 'hidden';
+      // Store original scroll position
+      app.dragScrollTop = scrollContainer.scrollTop;
+      
+      // Add class to container for styling during drag
+      scrollContainer.classList.add('is-dragging');
+      
+      // Create scroll zone indicators
+      createScrollZones();
       
       // Log activity
       logActivity('album_drag_started', {
@@ -223,8 +245,11 @@ function initializeSortable() {
     
     // Handle end of drag
     onEnd: async function(evt) {
-      // Re-enable scrolling
-      document.body.style.overflow = '';
+      // Remove dragging class
+      scrollContainer.classList.remove('is-dragging');
+      
+      // Remove scroll zones
+      removeScrollZones();
       
       // Check if position changed
       if (evt.oldIndex !== evt.newIndex) {
@@ -257,11 +282,9 @@ function initializeSortable() {
     }
   });
   
-  // Add touch event listeners for better mobile experience
+  // Simplified touch event listeners - only for visual feedback
   albumItems.forEach(item => {
     let touchTimer;
-    let touchStartX, touchStartY;
-    let isDragging = false;
     
     item.addEventListener('touchstart', (e) => {
       // Don't interfere with buttons or links
@@ -269,40 +292,73 @@ function initializeSortable() {
         return;
       }
       
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      
-      // Add visual feedback after short delay
+      // Only add visual feedback, don't prevent default
       touchTimer = setTimeout(() => {
-        if (!isDragging) {
-          item.classList.add('touch-active');
-          if ('vibrate' in navigator) {
-            navigator.vibrate(10);
-          }
+        item.classList.add('touch-active');
+        if ('vibrate' in navigator) {
+          navigator.vibrate(10);
         }
       }, 200);
-    }, { passive: true });
-    
-    item.addEventListener('touchmove', (e) => {
-      // Check if user has moved too much (cancel hold)
-      const moveX = Math.abs(e.touches[0].clientX - touchStartX);
-      const moveY = Math.abs(e.touches[0].clientY - touchStartY);
-      
-      if (moveX > 10 || moveY > 10) {
-        clearTimeout(touchTimer);
-        item.classList.remove('touch-active');
-      }
-    }, { passive: true });
+    });
     
     item.addEventListener('touchend', () => {
       clearTimeout(touchTimer);
       item.classList.remove('touch-active');
-    }, { passive: true });
+    });
     
     item.addEventListener('touchcancel', () => {
       clearTimeout(touchTimer);
       item.classList.remove('touch-active');
-    }, { passive: true });
+    });
+  });
+  
+  // Show/hide reorder hint based on album count
+  const reorderHint = document.getElementById('reorder-hint');
+  if (reorderHint) {
+    const albums = app.lists[app.currentList]?.data || [];
+    if (albums.length > 1) {
+      reorderHint.style.display = 'block';
+      reorderHint.title = 'Hold & drag to reorder';
+    } else {
+      reorderHint.style.display = 'none';
+    }
+  }
+}
+
+// Add scroll edge detection for visual feedback
+function setupScrollEdgeDetection() {
+  const albumContainer = document.getElementById('album-container');
+  if (!albumContainer) return;
+  
+  let rafId = null;
+  
+  const checkScrollEdges = () => {
+    if (!albumContainer.classList.contains('is-dragging')) return;
+    
+    const scrollTop = albumContainer.scrollTop;
+    const scrollHeight = albumContainer.scrollHeight;
+    const clientHeight = albumContainer.clientHeight;
+    const scrollBottom = scrollHeight - scrollTop - clientHeight;
+    
+    // Add/remove classes based on scroll position
+    albumContainer.classList.toggle('scroll-top', scrollTop < 100);
+    albumContainer.classList.toggle('scroll-bottom', scrollBottom < 100);
+    
+    rafId = requestAnimationFrame(checkScrollEdges);
+  };
+  
+  // Start checking when dragging starts
+  albumContainer.addEventListener('dragstart', () => {
+    checkScrollEdges();
+  });
+  
+  // Stop checking when dragging ends
+  albumContainer.addEventListener('dragend', () => {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    albumContainer.classList.remove('scroll-top', 'scroll-bottom');
   });
 }
 
@@ -390,6 +446,50 @@ function updatePlacementNumbers() {
       menuBtn.setAttribute('onclick', `showAlbumMenu(event, ${index})`);
     }
   });
+}
+
+// Create visual scroll zones
+function createScrollZones() {
+  const albumContainer = document.getElementById('album-container');
+  if (!albumContainer) return;
+  
+  // Top scroll zone
+  const topZone = document.createElement('div');
+  topZone.id = 'scroll-zone-top';
+  topZone.className = 'fixed top-0 left-0 right-0 h-20 pointer-events-none z-50 flex items-center justify-center';
+  topZone.innerHTML = '<i class="fas fa-chevron-up text-white text-2xl opacity-0 transition-opacity"></i>';
+  
+  // Bottom scroll zone
+  const bottomZone = document.createElement('div');
+  bottomZone.id = 'scroll-zone-bottom';
+  bottomZone.className = 'fixed bottom-0 left-0 right-0 h-20 pointer-events-none z-50 flex items-center justify-center';
+  bottomZone.innerHTML = '<i class="fas fa-chevron-down text-white text-2xl opacity-0 transition-opacity"></i>';
+  
+  document.body.appendChild(topZone);
+  document.body.appendChild(bottomZone);
+  
+  // Show indicators when near edges
+  const updateZoneVisibility = () => {
+    const rect = albumContainer.getBoundingClientRect();
+    const scrollTop = albumContainer.scrollTop;
+    const scrollHeight = albumContainer.scrollHeight;
+    const clientHeight = albumContainer.clientHeight;
+    
+    topZone.firstChild.classList.toggle('opacity-50', scrollTop > 50);
+    bottomZone.firstChild.classList.toggle('opacity-50', scrollHeight - scrollTop - clientHeight > 50);
+  };
+  
+  albumContainer.addEventListener('scroll', updateZoneVisibility);
+  updateZoneVisibility();
+}
+
+// Remove scroll zones
+function removeScrollZones() {
+  const topZone = document.getElementById('scroll-zone-top');
+  const bottomZone = document.getElementById('scroll-zone-bottom');
+  
+  if (topZone) topZone.remove();
+  if (bottomZone) bottomZone.remove();
 }
 
 // Function to handle album reordering (for future implementation)

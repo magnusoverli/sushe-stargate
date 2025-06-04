@@ -36,6 +36,53 @@
 }
 
 @layer components {
+    /* Autoscroll visual indicators */
+  #album-container {
+    @apply relative;
+    scroll-behavior: smooth;
+  }
+  
+  #album-container.is-dragging {
+    scroll-behavior: auto; /* Disable smooth scroll during drag */
+  }
+  
+  /* Scroll indicators - show when dragging */
+  #album-container.is-dragging::before,
+  #album-container.is-dragging::after {
+    content: '';
+    @apply absolute left-0 right-0 h-12 pointer-events-none z-40;
+    @apply opacity-0 transition-opacity duration-300;
+  }
+  
+  #album-container.is-dragging::before {
+    @apply top-0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  }
+  
+  #album-container.is-dragging::after {
+    @apply bottom-0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  }
+  
+  /* Show indicators when near edges */
+  #album-container.is-dragging.scroll-top::before {
+    @apply opacity-100;
+  }
+  
+  #album-container.is-dragging.scroll-bottom::after {
+    @apply opacity-100;
+  }
+  
+  /* Pulse animation for scroll zones */
+  @keyframes pulse-scroll {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+  
+  #album-container.is-dragging::before,
+  #album-container.is-dragging::after {
+    animation: pulse-scroll 2s ease-in-out infinite;
+  }
 
    /* Sortable styles */
   .sortable-container {
@@ -52,7 +99,6 @@
     @apply select-none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
-    touch-action: none;
   }
   
   .album-item.sortable-ghost {
@@ -75,7 +121,7 @@
     @apply bg-gray-700 scale-[1.02];
     @apply shadow-lg;
   }
-  
+
   .album-placement-mobile {
     @apply min-w-[3rem] text-center;
   }

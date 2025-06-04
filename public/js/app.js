@@ -7,7 +7,8 @@ const app = {
   isLoading: false,
   coverQueue: [],
   coverCache: new Map(),
-  observer: null
+  observer: null,
+  sortable: null
 };
 
 // Initialize app
@@ -127,6 +128,12 @@ function displayAlbums() {
   const albums = app.lists[app.currentList].data || [];
   const container = document.getElementById('album-container');
   
+  // Destroy existing sortable instance
+  if (app.sortable) {
+    app.sortable.destroy();
+    app.sortable = null;
+  }
+  
   if (albums.length === 0) {
     container.innerHTML = `
       <div class="text-center py-12 text-gray-500">
@@ -140,7 +147,7 @@ function displayAlbums() {
   
   // Use responsive grid that becomes table-like on desktop
   container.innerHTML = `
-    <div class="album-responsive-container">
+    <div class="album-responsive-container sortable-container" id="sortable-albums">
       <div class="hidden lg:grid album-header">
         <div class="col-num">#</div>
         <div class="col-cover">Cover</div>
@@ -155,9 +162,147 @@ function displayAlbums() {
     </div>
   `;
   
-  // Load covers after next frame to ensure DOM is ready
+  // Initialize sortable after DOM is ready
   requestAnimationFrame(() => {
+    initializeSortable();
     loadVisibleCovers();
+  });
+
+  const reorderHint = document.getElementById('reorder-hint');
+  if (reorderHint) {
+    if (albums.length > 1) {
+      reorderHint.style.display = 'block';
+      reorderHint.title = 'Hold & drag to reorder';
+    } else {
+      reorderHint.style.display = 'none';
+    }
+  }
+}
+
+function initializeSortable() {
+  const sortableContainer = document.getElementById('sortable-albums');
+  if (!sortableContainer) return;
+  
+  // Get all album items
+  const albumItems = sortableContainer.querySelectorAll('.album-item');
+  
+  // Configure SortableJS
+  app.sortable = Sortable.create(sortableContainer, {
+    animation: 150,
+    delay: 500, // 500ms delay for touch-and-hold
+    delayOnTouchOnly: true,
+    touchStartThreshold: 5, // 5px movement threshold
+    forceFallback: false, // Use native drag on desktop
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    chosenClass: 'sortable-chosen',
+    
+    // Filter to only make album-item elements sortable
+    draggable: '.album-item',
+    
+    // Prevent dragging by interactive elements
+    filter: '.album-menu-btn, .editable-field, input, button, a',
+    preventOnFilter: true,
+    
+    // Handle start of drag
+    onStart: function(evt) {
+      // Add haptic feedback on mobile
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+      
+      // Prevent scrolling while dragging
+      document.body.style.overflow = 'hidden';
+      
+      // Log activity
+      logActivity('album_drag_started', {
+        albumId: evt.item.dataset.albumId,
+        fromIndex: evt.oldIndex
+      });
+    },
+    
+    // Handle end of drag
+    onEnd: async function(evt) {
+      // Re-enable scrolling
+      document.body.style.overflow = '';
+      
+      // Check if position changed
+      if (evt.oldIndex !== evt.newIndex) {
+        // Reorder the albums in the data array
+        await reorderAlbums(evt.oldIndex, evt.newIndex);
+        
+        // Update placement numbers without full re-render
+        updatePlacementNumbers();
+        
+        // Haptic feedback on drop
+        if ('vibrate' in navigator) {
+          navigator.vibrate(20);
+        }
+      }
+    },
+    
+    // Handle choosing (touch/click start)
+    onChoose: function(evt) {
+      evt.item.classList.add('touch-active');
+    },
+    
+    // Handle unchoose
+    onUnchoose: function(evt) {
+      evt.item.classList.remove('touch-active');
+    },
+    
+    // Prevent sorting if we're in desktop header
+    onMove: function(evt) {
+      return !evt.related.classList.contains('album-header');
+    }
+  });
+  
+  // Add touch event listeners for better mobile experience
+  albumItems.forEach(item => {
+    let touchTimer;
+    let touchStartX, touchStartY;
+    let isDragging = false;
+    
+    item.addEventListener('touchstart', (e) => {
+      // Don't interfere with buttons or links
+      if (e.target.closest('.album-menu-btn, .editable-field, input, button, a')) {
+        return;
+      }
+      
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      
+      // Add visual feedback after short delay
+      touchTimer = setTimeout(() => {
+        if (!isDragging) {
+          item.classList.add('touch-active');
+          if ('vibrate' in navigator) {
+            navigator.vibrate(10);
+          }
+        }
+      }, 200);
+    }, { passive: true });
+    
+    item.addEventListener('touchmove', (e) => {
+      // Check if user has moved too much (cancel hold)
+      const moveX = Math.abs(e.touches[0].clientX - touchStartX);
+      const moveY = Math.abs(e.touches[0].clientY - touchStartY);
+      
+      if (moveX > 10 || moveY > 10) {
+        clearTimeout(touchTimer);
+        item.classList.remove('touch-active');
+      }
+    }, { passive: true });
+    
+    item.addEventListener('touchend', () => {
+      clearTimeout(touchTimer);
+      item.classList.remove('touch-active');
+    }, { passive: true });
+    
+    item.addEventListener('touchcancel', () => {
+      clearTimeout(touchTimer);
+      item.classList.remove('touch-active');
+    }, { passive: true });
   });
 }
 
@@ -260,9 +405,6 @@ async function reorderAlbums(fromIndex, toIndex) {
   // Save the reordered list
   await saveCurrentList();
   
-  // Update the display
-  displayAlbums();
-  
   // Log the activity
   await logActivity('albums_reordered', {
     listName: app.currentList,
@@ -270,6 +412,9 @@ async function reorderAlbums(fromIndex, toIndex) {
     toIndex,
     albumId: movedAlbum.album_id
   });
+  
+  // Show toast
+  showToast('Album order updated', 'success');
 }
 
 // Save current list

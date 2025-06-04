@@ -37,6 +37,45 @@
 
 @layer components {
 
+   /* Sortable styles */
+  .sortable-container {
+    @apply select-none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  .album-item {
+    @apply bg-gray-800 rounded-lg p-4 lg:p-0 lg:rounded-none lg:bg-transparent;
+    @apply lg:grid lg:grid-cols-[3rem_5rem_1fr_1fr_8rem_8rem_8rem_1fr] lg:gap-4 lg:px-4 lg:py-3 lg:border-b lg:border-gray-700 lg:hover:bg-gray-800;
+    @apply relative transition-colors duration-200;
+    /* Prevent text selection */
+    @apply select-none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+  }
+  
+  .album-item.sortable-ghost {
+    @apply opacity-40;
+  }
+  
+  .album-item.sortable-drag {
+    @apply opacity-0;
+  }
+  
+  .album-item.sortable-chosen {
+    @apply bg-gray-700 lg:bg-gray-700;
+    @apply shadow-xl;
+    @apply scale-105;
+    @apply z-50;
+  }
+  
+  /* Touch feedback */
+  .album-item.touch-active {
+    @apply bg-gray-700 scale-[1.02];
+    @apply shadow-lg;
+  }
+  
   .album-placement-mobile {
     @apply min-w-[3rem] text-center;
   }

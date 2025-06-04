@@ -163,7 +163,7 @@ function displayAlbums() {
 
 function createAlbumItem(album, index) {
   return `
-    <div class="album-item" data-index="${index}">
+    <div class="album-item" data-index="${index}" data-album-id="${album.album_id}">
       <div class="album-num hidden lg:block">${index + 1}</div>
       
       <div class="album-cover-container">
@@ -176,11 +176,16 @@ function createAlbumItem(album, index) {
       </div>
       
       <div class="album-info">
-        <div class="album-title">${escapeHtml(album.album)}</div>
-        <div class="album-artist">${escapeHtml(album.artist)}</div>
-        <div class="album-meta lg:hidden">
-          ${album.country ? `<span><i class="fas fa-globe"></i>${escapeHtml(album.country)}</span>` : ''}
-          ${album.genre_1 ? `<span><i class="fas fa-music"></i>${escapeHtml(album.genre_1)}</span>` : ''}
+        <div class="flex items-start gap-2 lg:block">
+          <span class="album-placement-mobile lg:hidden text-accent font-bold text-lg">#${index + 1}</span>
+          <div class="flex-1">
+            <div class="album-title">${escapeHtml(album.album)}</div>
+            <div class="album-artist">${escapeHtml(album.artist)}</div>
+            <div class="album-meta lg:hidden">
+              ${album.country ? `<span><i class="fas fa-globe"></i>${escapeHtml(album.country)}</span>` : ''}
+              ${album.genre_1 ? `<span><i class="fas fa-music"></i>${escapeHtml(album.genre_1)}</span>` : ''}
+            </div>
+          </div>
         </div>
       </div>
       
@@ -211,6 +216,60 @@ function createAlbumItem(album, index) {
       ` : ''}
     </div>
   `;
+}
+
+// Recalculate placement numbers after sorting
+function updatePlacementNumbers() {
+  // Update desktop view numbers
+  document.querySelectorAll('.album-num').forEach((elem, index) => {
+    elem.textContent = index + 1;
+  });
+  
+  // Update mobile view numbers
+  document.querySelectorAll('.album-placement-mobile').forEach((elem, index) => {
+    elem.textContent = `#${index + 1}`;
+  });
+  
+  // Update data-index attributes for proper field editing
+  document.querySelectorAll('.album-item').forEach((item, index) => {
+    item.dataset.index = index;
+    
+    // Update all editable fields' data-index
+    item.querySelectorAll('.editable-field').forEach(field => {
+      field.dataset.index = index;
+    });
+    
+    // Update menu button onclick
+    const menuBtn = item.querySelector('.album-menu-btn');
+    if (menuBtn) {
+      menuBtn.setAttribute('onclick', `showAlbumMenu(event, ${index})`);
+    }
+  });
+}
+
+// Function to handle album reordering (for future implementation)
+async function reorderAlbums(fromIndex, toIndex) {
+  if (!app.currentList || !app.lists[app.currentList]) return;
+  
+  const albums = app.lists[app.currentList].data;
+  
+  // Reorder the array
+  const [movedAlbum] = albums.splice(fromIndex, 1);
+  albums.splice(toIndex, 0, movedAlbum);
+  
+  // Save the reordered list
+  await saveCurrentList();
+  
+  // Update the display
+  displayAlbums();
+  
+  // Log the activity
+  await logActivity('albums_reordered', {
+    listName: app.currentList,
+    fromIndex,
+    toIndex,
+    albumId: movedAlbum.album_id
+  });
 }
 
 // Save current list

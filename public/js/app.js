@@ -185,44 +185,56 @@ function initializeSortable() {
   const sortableContainer = document.getElementById('sortable-albums');
   if (!sortableContainer) return;
   
-  // Get all album items
   const albumItems = sortableContainer.querySelectorAll('.album-item');
-  
-  // Find the scrollable container (album-container)
   const scrollContainer = document.getElementById('album-container');
   
-  // Detect if we're on a touch device
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // Destroy existing instance
+  if (app.sortable) {
+    app.sortable.destroy();
+    app.sortable = null;
+  }
   
-  // Configure SortableJS
+  // Configure SortableJS with better iOS support
   app.sortable = Sortable.create(sortableContainer, {
     animation: 150,
-    delay: 500, // 500ms delay for touch-and-hold
+    delay: 300, // Reduced from 500ms for better responsiveness
     delayOnTouchOnly: true,
-    touchStartThreshold: 5, // 5px movement threshold
-    forceFallback: isTouchDevice, // Force fallback on touch devices for better compatibility
+    touchStartThreshold: 10, // Increased threshold to prevent accidental drags
+    
+    // Critical iOS settings
+    forceFallback: true, // Always use fallback for consistency
+    fallbackTolerance: 5, // Add tolerance for touch
+    
     ghostClass: 'sortable-ghost',
     dragClass: 'sortable-drag',
     chosenClass: 'sortable-chosen',
-    fallbackClass: 'sortable-fallback', // Add fallback class
-    fallbackOnBody: true, // Append fallback element to body
-    swapThreshold: 0.65, // Threshold for swapping elements
+    fallbackClass: 'sortable-fallback',
     
-    // Filter to only make album-item elements sortable
+    // Important: Don't append to body on iOS as it can cause issues
+    fallbackOnBody: false,
+    
+    swapThreshold: 0.65,
+    invertSwap: true, // Add this for better touch behavior
+    
     draggable: '.album-item',
-    
-    // Prevent dragging by interactive elements
     filter: '.album-menu-btn, .editable-field, input, button, a',
     preventOnFilter: true,
     
-    // Simpler autoscroll configuration
-    scroll: scrollContainer, // Specify the scroll container directly
-    scrollSensitivity: 50, // Pixels from edge to start scrolling
-    scrollSpeed: 10, // Multiplication factor for scroll speed
+    // Simplified scroll settings
+    scroll: true, // Let SortableJS handle scrolling
+    scrollSensitivity: 100,
+    scrollSpeed: 15,
+    bubbleScroll: true, // Enable bubble scrolling for iOS
     
-    // Handle start of drag
     onStart: function(evt) {
-      // Add haptic feedback on mobile
+      // Temporarily disable zoom during drag
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 
+          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      }
+      
+      // Haptic feedback
       if ('vibrate' in navigator) {
         navigator.vibrate(10);
       }
@@ -230,87 +242,72 @@ function initializeSortable() {
       // Store original scroll position
       app.dragScrollTop = scrollContainer.scrollTop;
       
-      // Add class to container for styling during drag
+      // Add dragging class
       scrollContainer.classList.add('is-dragging');
+      evt.item.style.opacity = '0.4'; // Visual feedback
       
       // Create scroll zone indicators
       createScrollZones();
       
-      // Log activity
       logActivity('album_drag_started', {
         albumId: evt.item.dataset.albumId,
         fromIndex: evt.oldIndex
       });
     },
     
-    // Handle end of drag
     onEnd: async function(evt) {
+      // Re-enable zoom after drag
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 
+          'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      }
+      
       // Remove dragging class
       scrollContainer.classList.remove('is-dragging');
+      evt.item.style.opacity = ''; // Reset opacity
       
       // Remove scroll zones
       removeScrollZones();
       
-      // Check if position changed
       if (evt.oldIndex !== evt.newIndex) {
-        // Reorder the albums in the data array
         await reorderAlbums(evt.oldIndex, evt.newIndex);
-        
-        // Update placement numbers without full re-render
         updatePlacementNumbers();
         
-        // Haptic feedback on drop
         if ('vibrate' in navigator) {
           navigator.vibrate(20);
         }
       }
     },
     
-    // Handle choosing (touch/click start)
+    onChange: function(evt) {
+      // This fires during the drag when positions change
+      // Helps with visual feedback on iOS
+      updatePlacementNumbers();
+    },
+    
     onChoose: function(evt) {
       evt.item.classList.add('touch-active');
     },
     
-    // Handle unchoose
     onUnchoose: function(evt) {
       evt.item.classList.remove('touch-active');
     },
     
-    // Prevent sorting if we're in desktop header
     onMove: function(evt) {
       return !evt.related.classList.contains('album-header');
     }
   });
   
-  // Simplified touch event listeners - only for visual feedback
-  albumItems.forEach(item => {
-    let touchTimer;
-    
-    item.addEventListener('touchstart', (e) => {
-      // Don't interfere with buttons or links
-      if (e.target.closest('.album-menu-btn, .editable-field, input, button, a')) {
-        return;
+  // Add iOS-specific touch handling
+  if ('ontouchstart' in window) {
+    sortableContainer.addEventListener('touchmove', function(e) {
+      // Prevent iOS bounce scrolling during drag
+      if (app.sortable && app.sortable.dragging) {
+        e.preventDefault();
       }
-      
-      // Only add visual feedback, don't prevent default
-      touchTimer = setTimeout(() => {
-        item.classList.add('touch-active');
-        if ('vibrate' in navigator) {
-          navigator.vibrate(10);
-        }
-      }, 200);
-    });
-    
-    item.addEventListener('touchend', () => {
-      clearTimeout(touchTimer);
-      item.classList.remove('touch-active');
-    });
-    
-    item.addEventListener('touchcancel', () => {
-      clearTimeout(touchTimer);
-      item.classList.remove('touch-active');
-    });
-  });
+    }, { passive: false });
+  }
   
   // Show/hide reorder hint based on album count
   const reorderHint = document.getElementById('reorder-hint');

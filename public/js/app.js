@@ -2,7 +2,6 @@
 const app = {
   currentList: null,
   lists: {},
-  sortableInstance: null,
   touchStartY: 0,
   touchEndY: 0,
   isLoading: false,

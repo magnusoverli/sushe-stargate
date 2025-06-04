@@ -2,21 +2,19 @@ const validateRegistration = (req, res, next) => {
   const { email, username, password, confirmPassword } = req.body;
   const errors = [];
 
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
+  // Email validation - just check it looks like an email
+  if (!email || !email.includes('@')) {
     errors.push('Please provide a valid email address');
   }
 
-  // Username validation
-  const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
-  if (!username || !usernameRegex.test(username)) {
-    errors.push('Username must be 3-30 characters and contain only letters, numbers, and underscores');
+  // Username validation - just length
+  if (!username || username.length < 3) {
+    errors.push('Username must be at least 3 characters');
   }
 
-  // Password validation
-  if (!password || password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
+  // Password validation - just minimum length
+  if (!password || password.length < 4) {
+    errors.push('Password must be at least 4 characters long');
   }
 
   if (password !== confirmPassword) {
@@ -34,10 +32,10 @@ const validateRegistration = (req, res, next) => {
 const validatePasswordChange = (req, res, next) => {
   const { newPassword, confirmPassword } = req.body;
   
-  if (!newPassword || newPassword.length < 8) {
+  if (!newPassword || newPassword.length < 4) {
     return res.status(400).json({ 
       success: false, 
-      message: 'Password must be at least 8 characters long' 
+      message: 'Password must be at least 4 characters long' 
     });
   }
 

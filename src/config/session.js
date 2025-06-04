@@ -9,13 +9,13 @@ const sessionConfig = {
     table: 'sessions',
     concurrentDB: true
   }),
-  secret: process.env.SESSION_SECRET || 'default-secret-change-this',
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Always allow HTTP
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   },
   name: 'sushe.sid'
 };

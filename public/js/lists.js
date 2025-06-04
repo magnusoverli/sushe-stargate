@@ -333,8 +333,9 @@ async function createImportedList(listName, data) {
 }
 
 function showImportConflictDialog(listName, data) {
-  // Create conflict dialog
+  // Create conflict dialog with a unique ID
   const dialog = document.createElement('div');
+  dialog.id = 'import-conflict-modal'; // Add unique ID
   dialog.className = 'modal fixed inset-0 z-50 flex items-center justify-center p-4';
   dialog.innerHTML = `
     <div class="modal-backdrop" onclick="handleImportCancel()"></div>
@@ -388,6 +389,12 @@ async function handleImportConflict(listName, mode) {
   const data = window.pendingImportData;
   if (!data) return;
   
+  // Close the conflict modal immediately to prevent any issues
+  const conflictModal = document.getElementById('import-conflict-modal');
+  if (conflictModal) {
+    conflictModal.remove();
+  }
+  
   try {
     if (mode === 'overwrite') {
       // Replace existing list
@@ -428,23 +435,26 @@ async function handleImportConflict(listName, mode) {
     } else if (mode === 'rename') {
       // Get new name
       const newName = prompt('Enter a new name for the list:', `${listName} (imported)`);
-      if (!newName || newName.trim() === '') return;
+      if (!newName || newName.trim() === '') {
+        // User cancelled, clean up
+        delete window.pendingImportData;
+        delete window.pendingImportListName;
+        return;
+      }
       
       // Check if new name also exists
       if (app.lists[newName]) {
         showToast('A list with that name already exists', 'error');
+        // Re-show the conflict dialog
+        showImportConflictDialog(listName, data);
         return;
       }
       
       await createImportedList(newName, data);
       
-      // Clean up and close dialog
-      document.querySelector('.modal').remove();
+      // Clean up
       delete window.pendingImportData;
       delete window.pendingImportListName;
-      
-      // Make sure import modal is also closed
-      closeImportModal();
       
       showToast(`List "${newName}" imported successfully`, 'success');
       return;
@@ -454,27 +464,24 @@ async function handleImportConflict(listName, mode) {
     updateListsUI();
     await selectList(listName);
     
-    // Clean up and close dialog
-    document.querySelector('.modal').remove();
+    // Clean up temporary data
     delete window.pendingImportData;
     delete window.pendingImportListName;
-    
-    // Make sure import modal is also closed
-    closeImportModal();
     
     showToast('Import successful', 'success');
     
   } catch (error) {
     console.error('Import conflict handling error:', error);
     showToast('Failed to import data', 'error');
-    // Close modal on error too
-    closeImportModal();
   }
 }
 
 function handleImportCancel() {
-  // Remove conflict dialog
-  document.querySelector('.modal').remove();
+  // Remove conflict dialog by ID
+  const conflictModal = document.getElementById('import-conflict-modal');
+  if (conflictModal) {
+    conflictModal.remove();
+  }
   
   // Clean up temporary data
   delete window.pendingImportData;

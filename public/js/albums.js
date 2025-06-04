@@ -13,6 +13,8 @@ let selectedArtistId = null;
 let selectedArtistCountry = null; // Store the selected artist's country
 let searchCoverObserver = null;
 const searchCoverCache = new Map();
+let artistImageObserver = null;
+const artistImageCache = new Map();
 
 // Toggle search mode
 searchModeToggle?.addEventListener('click', () => {
@@ -83,17 +85,24 @@ function displayArtistResults(artists) {
   }
   
   artistResults.innerHTML = artists.slice(0, 20).map(artist => `
-    <div class="p-3 hover:bg-gray-700 cursor-pointer rounded" 
+    <div class="p-3 hover:bg-gray-700 cursor-pointer rounded flex items-center gap-3"
          onclick='selectArtist(${JSON.stringify({
            id: artist.id,
            name: artist.name,
            country: artist.country || artist.area?.name || ''
          }).replace(/'/g, '&apos;')})'>
-      <div class="font-medium">${escapeHtml(artist.name)}</div>
-      ${artist.disambiguation ? `<div class="text-sm text-gray-400">${escapeHtml(artist.disambiguation)}</div>` : ''}
-      ${artist.country || artist.area?.name ? `<div class="text-xs text-gray-500">${artist.country || artist.area?.name}</div>` : ''}
+      <div class="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+        <img class="artist-thumbnail w-full h-full object-cover" data-artist="${escapeHtml(artist.name)}" alt="artist">
+      </div>
+      <div>
+        <div class="font-medium">${escapeHtml(artist.name)}</div>
+        ${artist.disambiguation ? `<div class="text-sm text-gray-400">${escapeHtml(artist.disambiguation)}</div>` : ''}
+        ${artist.country || artist.area?.name ? `<div class="text-xs text-gray-500">${artist.country || artist.area?.name}</div>` : ''}
+      </div>
     </div>
   `).join('');
+
+  loadArtistImages();
 }
 
 async function selectArtist(artistData) {
@@ -587,6 +596,54 @@ async function fetchSearchCover(artist, album, mbid) {
     }
   } catch (err) {
     console.error('Search cover fetch error:', err);
+  }
+  return null;
+}
+
+function initializeArtistImageObserver() {
+  if (artistImageObserver) return;
+  artistImageObserver = new IntersectionObserver(async (entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const name = img.dataset.artist;
+        if (artistImageCache.has(name)) {
+          img.src = artistImageCache.get(name);
+          img.classList.add('loaded');
+        } else {
+          const base64 = await fetchArtistThumbnail(name);
+          if (base64) {
+            artistImageCache.set(name, base64);
+            img.src = base64;
+            img.onload = () => img.classList.add('loaded');
+          }
+        }
+        artistImageObserver.unobserve(img);
+      }
+    }
+  }, { rootMargin: '100px 0px', threshold: 0.01 });
+}
+
+function loadArtistImages() {
+  initializeArtistImageObserver();
+  document.querySelectorAll('.artist-thumbnail').forEach(img => {
+    artistImageObserver.observe(img);
+  });
+}
+
+async function fetchArtistThumbnail(artist) {
+  try {
+    const response = await fetch('/api/artist-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artist })
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return await urlToBase64(data.url);
+    }
+  } catch (err) {
+    console.error('Artist image fetch error:', err);
   }
   return null;
 }

@@ -168,6 +168,10 @@
   .album-cover {
     @apply w-full h-full object-cover;
   }
+
+  .artist-thumbnail {
+    @apply w-full h-full object-cover;
+  }
   
   .album-cover-placeholder {
     @apply w-full h-full flex items-center justify-center text-gray-500;

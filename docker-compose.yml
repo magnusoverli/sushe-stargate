@@ -4,11 +4,38 @@ services:
     container_name: sushe-stargate
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT}:3000"
     volumes:
       - ./data:/app/data
     environment:
-      - SESSION_SECRET=dev-secret-please-change
-      - NODE_ENV=development
-      - BASE_URL=http://localhost:3000
+      # Generate a secure session secret if not provided
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@localhost}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - NODE_ENV=production
       - DATA_DIR=/app/data
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-30}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/auth/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    # Resource limits (adjust based on your server)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  data:
+    driver: local

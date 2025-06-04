@@ -7,6 +7,7 @@ const { ensureAuthenticated } = require('../middleware/auth');
 const { logActivity } = require('../services/activity');
 const { searchArtist, searchAlbumsByArtist, searchAlbumsDirect } = require('../services/musicbrainz');
 const { fetchCoverArt } = require('../services/coverArt');
+const { fetchArtistImage } = require('../services/artistImage');
 const { generateAlbumId } = require('../utils/helpers');
 
 // Get all lists for user
@@ -188,6 +189,24 @@ router.post('/cover-art', ensureAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Cover art fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch cover art' });
+  }
+});
+
+// Fetch artist image
+router.post('/artist-image', ensureAuthenticated, async (req, res) => {
+  const { artist } = req.body;
+
+  try {
+    const imageUrl = await fetchArtistImage(artist);
+
+    if (imageUrl) {
+      res.json({ url: imageUrl });
+    } else {
+      res.status(404).json({ error: 'Image not found' });
+    }
+  } catch (error) {
+    console.error('Artist image fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch artist image' });
   }
 });
 

@@ -53,22 +53,46 @@ function showListContextMenu(event, listName) {
   
   const menu = document.createElement('div');
   menu.className = 'context-menu';
-  menu.innerHTML = `
+  
+  // Build menu items based on capabilities
+  let menuItems = `
     <div class="context-menu-item" onclick="closeMenuAndExecute(() => renameList('${listName}'))">
       <i class="fas fa-edit"></i>
       <span>Rename</span>
     </div>
-    <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
-      <i class="fas fa-download"></i>
-      <span>Export</span>
-    </div>
+  `;
+  
+  // Show share options on mobile, export on desktop
+  if (navigator.share) {
+    menuItems += `
+      <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
+        <i class="fas fa-share"></i>
+        <span>Share as File</span>
+      </div>
+      <div class="context-menu-item" onclick="closeMenuAndExecute(() => shareListAsText('${listName}'))">
+        <i class="fas fa-share-alt"></i>
+        <span>Share as Text</span>
+      </div>
+    `;
+  } else {
+    menuItems += `
+      <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
+        <i class="fas fa-download"></i>
+        <span>Export</span>
+      </div>
+    `;
+  }
+  
+  menuItems += `
     <div class="context-menu-item text-red-400" onclick="closeMenuAndExecute(() => deleteList('${listName}'))">
       <i class="fas fa-trash"></i>
       <span>Delete</span>
     </div>
   `;
   
-  // Position menu
+  menu.innerHTML = menuItems;
+  
+  // Rest of the positioning code...
   document.body.appendChild(menu);
   
   const rect = menu.getBoundingClientRect();
@@ -170,8 +194,7 @@ async function deleteList(listName) {
   }
 }
 
-// Export list
-function exportList(listName) {
+async function exportList(listName) {
   const list = app.lists[listName];
   if (!list || !list.data) return;
   
@@ -183,20 +206,54 @@ function exportList(listName) {
   
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const fileName = `${listName.replace(/[^a-z0-9]/gi, '_')}.json`;
   
+  // Check if Web Share API is available and can share files
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName)] })) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/json' });
+      
+      await navigator.share({
+        title: `SuShe Stargate - ${listName}`,
+        text: `My album list: ${listName} (${data.length} albums)`,
+        files: [file]
+      });
+      
+      showToast('List shared successfully', 'success');
+      logActivity('list_exported', { listName, albumCount: data.length, method: 'share' });
+      
+    } catch (error) {
+      // User cancelled the share or error occurred
+      if (error.name !== 'AbortError') {
+        console.error('Share failed:', error);
+        // Fall back to download
+        downloadList(blob, fileName);
+      }
+    }
+  } else {
+    // Fall back to download on desktop or if share API not available
+    downloadList(blob, fileName);
+  }
+}
+
+// Helper function to handle the download fallback
+function downloadList(blob, fileName) {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${listName.replace(/[^a-z0-9]/gi, '_')}.json`;
+  a.download = fileName;
   a.click();
   
   URL.revokeObjectURL(url);
   
   showToast('List exported successfully', 'success');
-  logActivity('list_exported', { listName, albumCount: data.length });
+  logActivity('list_exported', { 
+    listName: fileName.replace(/\.json$/, '').replace(/_/g, ' '), 
+    method: 'download' 
+  });
 }
 
-// Export current list
+// Export current list (this function is called by the button)
 function exportCurrentList() {
   if (!app.currentList) {
     showToast('No list selected', 'error');
@@ -204,6 +261,62 @@ function exportCurrentList() {
   }
   
   exportList(app.currentList);
+}
+
+// Export list with mobile share support
+async function exportList(listName) {
+  const list = app.lists[listName];
+  if (!list || !list.data) return;
+  
+  const data = list.data.map((album, index) => ({
+    ...album,
+    rank: index + 1,
+    points: list.data.length - index
+  }));
+  
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const fileName = `${listName.replace(/[^a-z0-9]/gi, '_')}.json`;
+  
+  // Check if Web Share API is available and can share files
+  if (navigator.share && navigator.canShare) {
+    try {
+      // First check if we can share files
+      const file = new File([blob], fileName, { type: 'application/json' });
+      const shareData = {
+        files: [file],
+        title: `SuShe Stargate - ${listName}`,
+        text: `My album list: ${listName} (${data.length} albums)`
+      };
+      
+      if (await navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        
+        showToast('List shared successfully', 'success');
+        logActivity('list_exported', { listName, albumCount: data.length, method: 'share' });
+        return;
+      }
+    } catch (error) {
+      // If share was cancelled by user, don't show error
+      if (error.name === 'AbortError') {
+        return;
+      }
+      console.error('Share failed:', error);
+      // Fall through to download
+    }
+  }
+  
+  // Fall back to download (on desktop or if share failed)
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  
+  URL.revokeObjectURL(url);
+  
+  showToast('List exported successfully', 'success');
+  logActivity('list_exported', { listName, albumCount: data.length, method: 'download' });
 }
 
 // Clear all lists

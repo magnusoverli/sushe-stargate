@@ -17,9 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Initialize components
   initializeModals();
-  initializeTooltips();
-  initializeSearch();
-  initializeContextMenus();
   initializeMobileMenu();
   
   // Load user data

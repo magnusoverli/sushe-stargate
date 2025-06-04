@@ -60,30 +60,6 @@ function showListContextMenu(event, listName) {
       <i class="fas fa-edit"></i>
       <span>Rename</span>
     </div>
-  `;
-  
-  // Show share options on mobile, export on desktop
-  if (navigator.share) {
-    menuItems += `
-      <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
-        <i class="fas fa-share"></i>
-        <span>Share as File</span>
-      </div>
-      <div class="context-menu-item" onclick="closeMenuAndExecute(() => shareListAsText('${listName}'))">
-        <i class="fas fa-share-alt"></i>
-        <span>Share as Text</span>
-      </div>
-    `;
-  } else {
-    menuItems += `
-      <div class="context-menu-item" onclick="closeMenuAndExecute(() => exportList('${listName}'))">
-        <i class="fas fa-download"></i>
-        <span>Export</span>
-      </div>
-    `;
-  }
-  
-  menuItems += `
     <div class="context-menu-item text-red-400" onclick="closeMenuAndExecute(() => deleteList('${listName}'))">
       <i class="fas fa-trash"></i>
       <span>Delete</span>

@@ -38,3 +38,4 @@ sessions/
 # Temporary files
 *.tmp
 *.temp
+-lock.json

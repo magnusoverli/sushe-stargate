@@ -30,17 +30,12 @@
                placeholder="your@email.com">
       </div>
       
-      <div class="mb-4">
-        <label for="password" class="block text-sm font-medium mb-2">Password</label>
-        <div class="relative">
-          <input type="password" id="password" name="password" required
-                 class="input-dark w-full pr-10" 
-                 placeholder="••••••••">
-          <button type="button" class="toggle-password absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-      </div>
+      <%- include('partials/password-input', { 
+        id: 'password',
+        name: 'password',
+        label: 'Password',
+        required: true
+      }) %>
       
       <div class="flex items-center justify-between mb-6">
         <label class="flex items-center">

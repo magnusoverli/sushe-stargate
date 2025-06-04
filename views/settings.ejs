@@ -60,21 +60,28 @@
     <div class="bg-gray-900 rounded-lg p-6">
       <h2 class="text-lg font-semibold mb-4">Change Password</h2>
       <form id="change-password-form" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Current Password</label>
-          <input type="password" name="currentPassword" required
-                 class="input-dark w-full">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">New Password</label>
-          <input type="password" name="newPassword" required minlength="8"
-                 class="input-dark w-full">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Confirm New Password</label>
-          <input type="password" name="confirmPassword" required
-                 class="input-dark w-full">
-        </div>
+        <%- include('partials/password-input', { 
+          id: 'currentPassword',
+          name: 'currentPassword',
+          label: 'Current Password',
+          required: true,
+          containerClass: ''
+        }) %>
+        <%- include('partials/password-input', { 
+          id: 'newPassword',
+          name: 'newPassword',
+          label: 'New Password',
+          required: true,
+          minlength: 8,
+          containerClass: ''
+        }) %>
+        <%- include('partials/password-input', { 
+          id: 'confirmPassword',
+          name: 'confirmPassword',
+          label: 'Confirm New Password',
+          required: true,
+          containerClass: ''
+        }) %>
         <button type="submit" class="btn-primary">
           Change Password
         </button>
@@ -296,4 +303,7 @@ document.getElementById('admin-code-form')?.addEventListener('submit', async (e)
     alert('Failed to submit code');
   }
 });
+
 </script>
+
+<script src="/js/auth.js"></script>

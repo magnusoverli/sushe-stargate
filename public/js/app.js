@@ -197,9 +197,6 @@ function displayAlbums() {
         </tbody>
       </table>
     `;
-    
-    // Initialize sortable for desktop
-    initializeSortable();
   }
   
   // Load cover images
@@ -296,62 +293,6 @@ function createAlbumCard(album, index) {
       ` : ''}
     </div>
   `;
-}
-
-// Initialize sortable
-function initializeSortable() {
-  const tbody = document.getElementById('album-list');
-  if (!tbody) return;
-  
-  // Destroy existing instance
-  if (app.sortableInstance) {
-    app.sortableInstance.destroy();
-  }
-  
-  // Create new instance
-  app.sortableInstance = new Sortable(tbody, {
-    animation: 150,
-    ghostClass: 'sortable-ghost',
-    chosenClass: 'sortable-chosen',
-    dragClass: 'sortable-drag',
-    forceFallback: true,
-    fallbackClass: 'sortable-drag',
-    
-    onStart: function(evt) {
-      document.body.style.cursor = 'grabbing';
-      logActivity('album_reorder_start', { 
-        fromIndex: evt.oldIndex,
-        listName: app.currentList
-      });
-    },
-    
-    onEnd: async function(evt) {
-      document.body.style.cursor = '';
-      
-      if (evt.oldIndex !== evt.newIndex) {
-        // Update data
-        const albums = [...app.lists[app.currentList].data];
-        const [movedAlbum] = albums.splice(evt.oldIndex, 1);
-        albums.splice(evt.newIndex, 0, movedAlbum);
-        
-        app.lists[app.currentList].data = albums;
-        
-        // Save to server
-        await saveCurrentList();
-        
-        // Update row numbers
-        tbody.querySelectorAll('tr').forEach((row, index) => {
-          row.querySelector('td:first-child').textContent = index + 1;
-        });
-        
-        logActivity('album_reorder_complete', { 
-          fromIndex: evt.oldIndex,
-          toIndex: evt.newIndex,
-          listName: app.currentList
-        });
-      }
-    }
-  });
 }
 
 // Save current list

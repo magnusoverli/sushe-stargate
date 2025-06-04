@@ -509,9 +509,6 @@ async function reorderAlbums(fromIndex, toIndex) {
     toIndex,
     albumId: movedAlbum.album_id
   });
-  
-  // Show toast
-  showToast('Album order updated', 'success');
 }
 
 // Save current list

@@ -36,6 +36,14 @@
 }
 
 @layer components {
+  .sortable-fallback .album-placement-mobile,
+  .sortable-drag .album-placement-mobile,
+  .sortable-fallback .album-num,
+  .sortable-drag .album-num {
+    @apply opacity-0;
+  }
+
+  
     /* Autoscroll visual indicators */
   #album-container {
     @apply relative;

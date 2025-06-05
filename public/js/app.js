@@ -764,7 +764,7 @@ async function checkAdminStatus() {
 
 function initializeMobileMenu() {
   const hamburger = document.getElementById('mobile-menu-btn');
-  const desktopToggle = document.getElementById('desktop-menu-btn');
+  const sidebarToggle = document.getElementById('desktop-menu-btn');
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('mobile-overlay');
   
@@ -783,7 +783,7 @@ function initializeMobileMenu() {
   hamburger?.addEventListener('click', () => toggleSidebar(true));
   overlay?.addEventListener('click', () => toggleSidebar(false));
 
-  desktopToggle?.addEventListener('click', () => {
+  sidebarToggle?.addEventListener('click', () => {
     if (window.innerWidth >= 1024) {
       sidebar.classList.toggle('hidden');
     } else {

@@ -1,10 +1,10 @@
 const https = require('https');
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache');
 
 // Reuse connections
 const httpsAgent = new https.Agent({ keepAlive: true });
 
-const searchCache = new LRU({ max: 100, ttl: 1000 * 60 * 10 }); // 10 min cache
+const searchCache = new LRUCache({ max: 100, ttl: 1000 * 60 * 10 }); // 10 min cache
 
 const USER_AGENT = 'SuShe-Stargate/1.0.0 (https://github.com/yourusername/sushe-stargate)';
 

@@ -1,12 +1,12 @@
 const https = require('https');
 const http = require('http');
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache');
 
 // Keep connections alive
 const httpsAgent = new https.Agent({ keepAlive: true });
 const httpAgent = new http.Agent({ keepAlive: true });
 
-const coverCache = new LRU({ max: 200, ttl: 1000 * 60 * 60 * 24 }); // 24h
+const coverCache = new LRUCache({ max: 200, ttl: 1000 * 60 * 60 * 24 }); // 24h
 
 // iTunes Search API
 const searchiTunes = (artist, album) => {

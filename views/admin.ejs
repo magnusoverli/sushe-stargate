@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-black">
   <!-- Header -->
-  <header class="bg-gray-900 border-b border-gray-800 p-4">
-    <div class="flex items-center justify-between">
+  <header class="bg-gray-900 border-b border-gray-800">
+    <div class="max-w-7xl mx-auto flex items-center justify-between p-4">
       <div class="flex items-center gap-4">
         <a href="/" class="text-gray-400 hover:text-white">
           <i class="fas fa-arrow-left"></i>
@@ -19,9 +19,9 @@
     </div>
   </header>
   
-  <div id="admin-panel" class="p-4 lg:p-6">
+  <div id="admin-panel" class="max-w-7xl mx-auto p-4 lg:p-6 space-y-8">
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
       <div class="bg-gray-900 rounded-lg p-4">
         <div class="text-2xl font-bold" id="total-users"><%= stats.totalUsers %></div>
         <div class="text-sm text-gray-400">Total Users</div>
@@ -51,13 +51,14 @@
         <div class="text-sm text-gray-400">CPU Load</div>
       </div>
     </div>
-    
-    <!-- Users Table -->
-    <div class="bg-gray-900 rounded-lg p-6 mb-6">
+
+    <div class="grid gap-6 lg:grid-cols-3">
+      <!-- Users Table -->
+      <div class="bg-gray-900 rounded-lg p-6 mb-6 lg:mb-0 lg:col-span-2">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Users</h2>
-        <input type="text" id="user-search" placeholder="Search users..." 
-               class="input-dark w-64">
+        <input type="text" id="user-search" placeholder="Search users..."
+               class="input-dark w-full sm:w-72">
       </div>
       
       <div class="overflow-x-auto">
@@ -87,7 +88,7 @@
                 <td><%= user.listCount %></td>
                 <td><%= new Date(user.createdAt).toLocaleDateString() %></td>
                 <td>
-                  <div class="flex gap-2">
+                  <div class="flex flex-wrap gap-2">
                     <% if (user.role !== 'admin') { %>
                       <button onclick="makeAdmin('<%= user._id %>')" 
                               class="text-xs bg-green-600 hover:bg-green-700 px-2 py-1 rounded">
@@ -116,18 +117,19 @@
           </tbody>
         </table>
       </div>
-    </div>
-    
-    <!-- Activity Stream -->
-    <div class="bg-gray-900 rounded-lg p-6">
+      </div>
+
+      <!-- Activity Stream -->
+      <div class="bg-gray-900 rounded-lg p-6 lg:col-span-1">
       <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
       <div id="activity-stream" class="space-y-2 max-h-96 overflow-y-auto">
         <!-- Activity items will be loaded here -->
       </div>
+      </div>
     </div>
-    
+
     <!-- System Actions -->
-    <div class="bg-gray-900 rounded-lg p-6 mt-6">
+    <div class="bg-gray-900 rounded-lg p-6">
       <h2 class="text-lg font-semibold mb-4">System Actions</h2>
       <div class="flex gap-3">
         <button onclick="clearAllSessions()" class="btn-secondary">

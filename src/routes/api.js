@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const List = require('../models/List');
 const User = require('../models/User');
 const { ensureAuthenticated } = require('../middleware/auth');
@@ -8,7 +7,6 @@ const { logActivity } = require('../services/activity');
 const { searchArtist, searchAlbumsByArtist, searchAlbumsDirect } = require('../services/musicbrainz');
 const { fetchCoverArt } = require('../services/coverArt');
 const { fetchArtistImage } = require('../services/artistImage');
-const { generateAlbumId } = require('../utils/helpers');
 
 // Get all lists for user
 router.get('/lists', ensureAuthenticated, async (req, res) => {

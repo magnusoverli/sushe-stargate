@@ -16,31 +16,6 @@ const loadReferenceData = (filename) => {
 const countries = loadReferenceData('countries.txt');
 const genres = loadReferenceData('genres.txt');
 
-// Format date for display
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  
-  // Handle different date formats
-  if (dateString.length === 4) {
-    return dateString; // Year only
-  } else if (dateString.length === 7) {
-    return dateString; // YYYY-MM
-  } else {
-    const date = new Date(dateString);
-    if (isNaN(date)) return dateString;
-    return date.toLocaleDateString();
-  }
-};
-
-// Generate a unique album ID for manual entries
-const generateAlbumId = () => {
-  return `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
-
-// Sanitize filename for downloads
-const sanitizeFilename = (filename) => {
-  return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-};
 
 // Rate limiting helper
 const rateLimiters = new Map();
@@ -64,8 +39,5 @@ const checkRateLimit = (key, maxAttempts, windowMs) => {
 module.exports = {
   countries,
   genres,
-  formatDate,
-  generateAlbumId,
-  sanitizeFilename,
   checkRateLimit
 };

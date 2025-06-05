@@ -49,7 +49,28 @@ const validatePasswordChange = (req, res, next) => {
   next();
 };
 
+const validatePasswordResetForm = (req, res, next) => {
+  const { newPassword, confirmPassword } = req.body;
+  const errors = [];
+
+  if (!newPassword || newPassword.length < 4) {
+    errors.push('Password must be at least 4 characters long');
+  }
+
+  if (newPassword !== confirmPassword) {
+    errors.push('Passwords do not match');
+  }
+
+  if (errors.length > 0) {
+    req.flash('error_msg', errors.join(', '));
+    return res.redirect(`/auth/reset/${req.params.token}`);
+  }
+
+  next();
+};
+
 module.exports = {
   validateRegistration,
-  validatePasswordChange
+  validatePasswordChange,
+  validatePasswordResetForm
 };

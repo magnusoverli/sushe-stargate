@@ -10,18 +10,18 @@ module.exports = function(passport) {
         try {
           // Use the User model instead of direct db access
           const user = await User.findByEmail(email);
-          
+
           if (!user) {
-            return done(null, false, { message: 'Invalid credentials' });
+            return done(null, false, { message: 'Email not found' });
           }
 
           // Match password
           const isMatch = await bcrypt.compare(password, user.hash);
-          
+
           if (isMatch) {
             return done(null, user);
           } else {
-            return done(null, false, { message: 'Invalid credentials' });
+            return done(null, false, { message: 'Incorrect password' });
           }
         } catch (error) {
           return done(error);

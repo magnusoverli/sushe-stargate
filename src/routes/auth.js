@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const { sendPasswordResetEmail } = require('../services/email');
 const { validateRegistration, validatePasswordChange } = require('../middleware/validation');
+const { validatePasswordResetForm } = require('../middleware/validation');
 const { ensureGuest } = require('../middleware/auth');
 const { logActivity } = require('../services/activity');
 const { checkRateLimit } = require('../utils/helpers');
@@ -99,7 +100,8 @@ router.get('/logout', (req, res) => {
     if (userId) {
       logActivity(userId, 'logout', {}, req).catch(console.error);
     }
-    
+
+    req.flash('success_msg', 'You have been logged out.');
     res.redirect('/auth/login');
   });
 });
@@ -117,8 +119,7 @@ router.post('/forgot', ensureGuest, async (req, res) => {
     const user = await User.findByEmail(email);
     
     if (!user) {
-      // Don't reveal if email exists
-      req.flash('success_msg', 'If that email exists, a reset link has been sent.');
+      req.flash('error_msg', 'Email not found');
       return res.redirect('/auth/forgot');
     }
     
@@ -169,7 +170,7 @@ router.get('/reset/:token', ensureGuest, async (req, res) => {
 });
 
 // Reset password handler
-router.post('/reset/:token', ensureGuest, validatePasswordChange, async (req, res) => {
+router.post('/reset/:token', ensureGuest, validatePasswordResetForm, async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
   

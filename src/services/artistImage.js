@@ -1,10 +1,10 @@
 const https = require('https');
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache');
 
 // Keep connections alive
 const httpsAgent = new https.Agent({ keepAlive: true });
 
-const imageCache = new LRU({ max: 200, ttl: 1000 * 60 * 60 }); // 1 hour
+const imageCache = new LRUCache({ max: 200, ttl: 1000 * 60 * 60 }); // 1 hour
 
 
 const searchiTunesArtist = (artist) => {

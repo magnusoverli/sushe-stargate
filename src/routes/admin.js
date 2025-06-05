@@ -189,19 +189,17 @@ router.get('/user-lists/:userId', ensureAdmin, async (req, res) => {
 // Database backup
 router.get('/backup', ensureAdmin, async (req, res) => {
   try {
+    const users = await User.findAll();
+    const lists = db.prepare('SELECT * FROM lists').all();
+    const activity = db.prepare('SELECT * FROM activity').all();
+
     const backup = {
       timestamp: new Date().toISOString(),
       version: '1.0.0',
       data: {
-        users: await new Promise((resolve, reject) => {
-          db.users.find({}, (err, docs) => err ? reject(err) : resolve(docs));
-        }),
-        lists: await new Promise((resolve, reject) => {
-          db.lists.find({}, (err, docs) => err ? reject(err) : resolve(docs));
-        }),
-        activity: await new Promise((resolve, reject) => {
-          db.activity.find({}, (err, docs) => err ? reject(err) : resolve(docs));
-        })
+        users,
+        lists,
+        activity
       }
     };
     

@@ -14,8 +14,6 @@ function initializeAdminPanel() {
   // Refresh stats periodically
   setInterval(refreshStats, 30000);
   
-  // Initialize user search
-  initializeUserSearch();
 }
 
 // Make user admin
@@ -246,22 +244,3 @@ async function refreshStats() {
   }
 }
 
-// User search
-function initializeUserSearch() {
-  const searchInput = document.getElementById('user-search');
-  if (!searchInput) return;
-  
-  let debounceTimer;
-  searchInput.addEventListener('input', (e) => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      const query = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll('#users-table tbody tr');
-      
-      rows.forEach(row => {
-        const searchText = row.textContent.toLowerCase();
-        row.style.display = searchText.includes(query) ? '' : 'none';
-      });
-    }, 300);
-  });
-}

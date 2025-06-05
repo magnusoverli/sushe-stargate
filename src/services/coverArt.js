@@ -1,9 +1,12 @@
 const https = require('https');
 const http = require('http');
+const { LRUCache } = require('lru-cache');
 
 // Keep connections alive
 const httpsAgent = new https.Agent({ keepAlive: true });
 const httpAgent = new http.Agent({ keepAlive: true });
+
+const coverCache = new LRUCache({ max: 200, ttl: 1000 * 60 * 60 * 24 }); // 24h
 
 // iTunes Search API
 const searchiTunes = (artist, album) => {
@@ -136,19 +139,27 @@ const searchCoverArtArchive = (mbid) => {
 
 // Main function with fallback
 const fetchCoverArt = async (artist, album, mbid = null) => {
-  // Try iTunes first
-  let coverUrl = await searchiTunes(artist, album);
-  
-  // Try Deezer if iTunes fails
-  if (!coverUrl) {
-    coverUrl = await searchDeezer(artist, album);
+  const cacheKey = mbid || `${artist}|${album}`;
+  if (coverCache.has(cacheKey)) {
+    return coverCache.get(cacheKey);
   }
-  
-  // Try Cover Art Archive if we have an MBID
+
+  // Query iTunes and Deezer in parallel
+  const [itunes, deezer] = await Promise.all([
+    searchiTunes(artist, album),
+    searchDeezer(artist, album)
+  ]);
+
+  let coverUrl = itunes || deezer || null;
+
   if (!coverUrl && mbid) {
     coverUrl = await searchCoverArtArchive(mbid);
   }
-  
+
+  if (coverUrl) {
+    coverCache.set(cacheKey, coverUrl);
+  }
+
   return coverUrl;
 };
 

@@ -1,7 +1,10 @@
 const https = require('https');
+const { LRUCache } = require('lru-cache');
 
 // Keep connections alive
 const httpsAgent = new https.Agent({ keepAlive: true });
+
+const imageCache = new LRUCache({ max: 200, ttl: 1000 * 60 * 60 }); // 1 hour
 
 
 const searchiTunesArtist = (artist) => {
@@ -86,13 +89,21 @@ const searchDeezerArtist = (artist) => {
   });
 };
 
-const fetchArtistImage = async (artist) => {
-  // Try iTunes first
-  let image = await searchiTunesArtist(artist);
+const fetchArtistImage = async (artist, mbid = '') => {
+  const cacheKey = mbid || artist;
+  if (imageCache.has(cacheKey)) {
+    return imageCache.get(cacheKey);
+  }
 
-  // Fallback to Deezer search if no image found
-  if (!image) {
-    image = await searchDeezerArtist(artist);
+  // Try iTunes and Deezer in parallel
+  const [itunes, deezer] = await Promise.all([
+    searchiTunesArtist(artist),
+    searchDeezerArtist(artist)
+  ]);
+
+  const image = itunes || deezer || null;
+  if (image) {
+    imageCache.set(cacheKey, image);
   }
 
   return image;

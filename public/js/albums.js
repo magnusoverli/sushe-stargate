@@ -15,6 +15,7 @@ let searchCoverObserver = null;
 const searchCoverCache = new Map();
 let artistImageObserver = null;
 const artistImageCache = new Map();
+const artistPlaceholder = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzU1NSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMmE1IDUgMCAxMTAgMTAgNSA1IDAgMDEwLTEwem0wIDEyYy0zLjg2NiAwLTcgMy4xMzQtNyA3aDJhNSA1IDAgMDExMCAwaDJjMC0zLjg2Ni0zLjEzNC03LTctN3oiLz48L3N2Zz4K';
 
 // Toggle search mode
 searchModeToggle?.addEventListener('click', () => {
@@ -149,6 +150,10 @@ function clearArtistSelection() {
 
 function displayAlbumResults(albums, artistName = null) {
   albumResults.classList.remove('hidden');
+
+  // Remove loading spinner if it exists
+  const spinner = artistResults.querySelector('.fa-spinner');
+  if (spinner) spinner.parentElement.remove();
   
   if (albums.length === 0) {
     albumResults.innerHTML = '<p class="text-gray-500 text-center py-4">No albums found</p>';
@@ -618,6 +623,10 @@ function initializeArtistImageObserver() {
             artistImageCache.set(cacheKey, base64);
             img.src = base64;
             img.onload = () => img.classList.add('loaded');
+          } else {
+            artistImageCache.set(cacheKey, artistPlaceholder);
+            img.src = artistPlaceholder;
+            img.classList.add('loaded');
           }
         }
         artistImageObserver.unobserve(img);

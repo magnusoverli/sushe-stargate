@@ -764,6 +764,7 @@ async function checkAdminStatus() {
 
 function initializeMobileMenu() {
   const hamburger = document.getElementById('mobile-menu-btn');
+  const sidebarToggle = document.getElementById('desktop-menu-btn');
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('mobile-overlay');
   
@@ -781,6 +782,14 @@ function initializeMobileMenu() {
   
   hamburger?.addEventListener('click', () => toggleSidebar(true));
   overlay?.addEventListener('click', () => toggleSidebar(false));
+
+  sidebarToggle?.addEventListener('click', () => {
+    if (window.innerWidth >= 1024) {
+      sidebar.classList.toggle('hidden');
+    } else {
+      toggleSidebar(true);
+    }
+  });
   
   // Close sidebar on list selection on mobile
   if (window.innerWidth < 1024) {

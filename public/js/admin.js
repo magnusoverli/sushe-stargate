@@ -195,12 +195,21 @@ async function refreshStats() {
   try {
     const response = await fetch('/admin/api/stats');
     const stats = await response.json();
-    
+
     // Update stat cards
     document.getElementById('total-users').textContent = stats.totalUsers;
     document.getElementById('total-lists').textContent = stats.totalLists;
     document.getElementById('total-albums').textContent = stats.totalAlbums;
     document.getElementById('active-users').textContent = stats.activeUsers;
+    if (document.getElementById('memory-usage')) {
+      document.getElementById('memory-usage').textContent = `${stats.memoryUsageMB} MB`;
+    }
+    if (document.getElementById('system-uptime')) {
+      document.getElementById('system-uptime').textContent = stats.systemUptimeHrs;
+    }
+    if (document.getElementById('cpu-load')) {
+      document.getElementById('cpu-load').textContent = stats.loadAvg1;
+    }
   } catch (error) {
     console.error('Stats refresh error:', error);
   }

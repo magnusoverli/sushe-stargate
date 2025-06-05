@@ -50,6 +50,48 @@ const searchMusicBrainz = (query, type = 'release-group') => {
   });
 };
 
+// Browse release groups for a specific artist
+const browseReleaseGroups = (artistId) => {
+  const cacheKey = `browse:${artistId}`;
+  if (searchCache.has(cacheKey)) {
+    return Promise.resolve(searchCache.get(cacheKey));
+  }
+
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'musicbrainz.org',
+      path: `/ws/2/release-group?artist=${artistId}&type=album|ep&limit=200&fmt=json`,
+      method: 'GET',
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'application/json'
+      },
+      agent: httpsAgent
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const results = JSON.parse(data);
+          searchCache.set(cacheKey, results);
+          resolve(results);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
+};
+
 const searchArtist = async (artistName) => {
   try {
     const results = await searchMusicBrainz(artistName, 'artist');
@@ -62,8 +104,7 @@ const searchArtist = async (artistName) => {
 
 const searchAlbumsByArtist = async (artistId) => {
   try {
-    const query = `arid:${artistId} AND primarytype:album`;
-    const results = await searchMusicBrainz(query, 'release-group');
+    const results = await browseReleaseGroups(artistId);
     
     // Filter and sort results
     const albums = (results['release-groups'] || [])

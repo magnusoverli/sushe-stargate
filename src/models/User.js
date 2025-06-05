@@ -57,10 +57,20 @@ class User {
   
   static async updateById(id, updates) {
     updates.updatedAt = new Date().toISOString();
-    
+
+    // Convert Date objects to ISO strings and undefined to null
+    Object.keys(updates).forEach(key => {
+      const value = updates[key];
+      if (value instanceof Date) {
+        updates[key] = value.toISOString();
+      } else if (typeof value === 'undefined') {
+        updates[key] = null;
+      }
+    });
+
     const fields = Object.keys(updates).map(key => `${key} = @${key}`).join(', ');
     const stmt = db.prepare(`UPDATE users SET ${fields} WHERE id = @id`);
-    
+
     stmt.run({ ...updates, id });
     return this.findById(id);
   }

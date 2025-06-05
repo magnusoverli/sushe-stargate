@@ -785,7 +785,7 @@ function initializeMobileMenu() {
 
   sidebarToggle?.addEventListener('click', () => {
     if (window.innerWidth >= 1024) {
-      sidebar.classList.toggle('hidden');
+      sidebar.classList.toggle('desktop-collapsed');
     } else {
       toggleSidebar(true);
     }

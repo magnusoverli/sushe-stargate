@@ -479,4 +479,9 @@
   .shadow-accent {
     box-shadow: 0 0 20px var(--accent-color-shadow);
   }
+
+  /* Partially hidden desktop sidebar */
+  .desktop-collapsed {
+    @apply -translate-x-56;
+  }
 }

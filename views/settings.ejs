@@ -123,7 +123,15 @@
 
     <!-- Other -->
     <section class="bg-gray-900 rounded-lg p-6 space-y-6">
-      <% if (user.role !== 'admin') { %>
+      <% if (user.role === 'admin') { %>
+        <div>
+          <h2 class="text-lg font-semibold mb-4">Admin Options</h2>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a href="/admin" class="btn-secondary flex-1 inline-block"><i class="fas fa-shield-alt mr-2"></i>Admin Panel</a>
+            <button id="clear-sessions" class="btn-secondary flex-1"><i class="fas fa-user-slash mr-2"></i>Clear Sessions</button>
+          </div>
+        </div>
+      <% } else { %>
         <div>
           <h2 class="text-lg font-semibold mb-4">Admin Access</h2>
           <p class="text-sm text-gray-400 mb-4">Enter the admin code to gain administrative privileges.</p>
@@ -283,6 +291,25 @@ document.getElementById('admin-code-form')?.addEventListener('submit', async (e)
   } catch (error) {
     console.error('Admin code error:', error);
     alert('Failed to submit code');
+  }
+});
+
+// Clear all sessions (admin only)
+document.getElementById('clear-sessions')?.addEventListener('click', async () => {
+  if (!confirm('Clear all user sessions? This will log out all users.')) return;
+
+  try {
+    const response = await fetch('/admin/clear-sessions', { method: 'POST' });
+
+    if (response.ok) {
+      const data = await response.json();
+      alert(`Cleared ${data.count} sessions`);
+    } else {
+      throw new Error('Failed to clear sessions');
+    }
+  } catch (error) {
+    console.error('Clear sessions error:', error);
+    alert('Failed to clear sessions');
   }
 });
 

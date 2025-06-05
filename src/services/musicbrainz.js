@@ -115,10 +115,10 @@ const searchAlbumsByArtist = async (artistId) => {
                secondaryTypes.length === 0;
       })
       .sort((a, b) => {
-        // Sort by first release date
-        const dateA = a['first-release-date'] || '9999';
-        const dateB = b['first-release-date'] || '9999';
-        return dateA.localeCompare(dateB);
+        // Sort by first release date - newest first
+        const dateA = a['first-release-date'] || '0000';  // Changed from '9999'
+        const dateB = b['first-release-date'] || '0000';  // Changed from '9999'
+        return dateB.localeCompare(dateA);  // Reversed comparison
       });
     
     return albums;

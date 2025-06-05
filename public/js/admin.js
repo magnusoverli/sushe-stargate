@@ -155,6 +155,25 @@ async function clearAllSessions() {
   }
 }
 
+// Clean old activity logs
+async function cleanLogs() {
+  if (!confirm('Remove old activity logs?')) return;
+
+  try {
+    const response = await fetch('/admin/clean-logs', { method: 'POST' });
+
+    if (response.ok) {
+      const data = await response.json();
+      alert(`Removed ${data.removed} log entries`);
+    } else {
+      throw new Error('Failed to clean logs');
+    }
+  } catch (error) {
+    console.error('Clean logs error:', error);
+    alert('Failed to clean logs');
+  }
+}
+
 // Activity stream
 function startActivityStream() {
   const activityContainer = document.getElementById('activity-stream');
@@ -198,8 +217,17 @@ async function refreshStats() {
 
     // Update stat cards
     document.getElementById('total-users').textContent = stats.totalUsers;
+    if (document.getElementById('new-users')) {
+      document.getElementById('new-users').textContent = stats.newUsers7d;
+    }
     document.getElementById('total-lists').textContent = stats.totalLists;
+    if (document.getElementById('new-lists')) {
+      document.getElementById('new-lists').textContent = stats.newLists7d;
+    }
     document.getElementById('total-albums').textContent = stats.totalAlbums;
+    if (document.getElementById('db-size')) {
+      document.getElementById('db-size').textContent = `${stats.dbSizeMB} MB`;
+    }
     document.getElementById('active-users').textContent = stats.activeUsers;
     if (document.getElementById('memory-usage')) {
       document.getElementById('memory-usage').textContent = `${stats.memoryUsageMB} MB`;
@@ -209,6 +237,9 @@ async function refreshStats() {
     }
     if (document.getElementById('cpu-load')) {
       document.getElementById('cpu-load').textContent = stats.loadAvg1;
+    }
+    if (document.getElementById('node-version')) {
+      document.getElementById('node-version').textContent = stats.nodeVersion;
     }
   } catch (error) {
     console.error('Stats refresh error:', error);

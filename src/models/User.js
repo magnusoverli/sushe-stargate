@@ -100,6 +100,12 @@ class User {
     stmt.run(token, expiresStr, new Date().toISOString(), email.toLowerCase());
     return this.findByEmail(email);
   }
+
+  static countSince(dateIso) {
+    const stmt = db.prepare('SELECT COUNT(*) as count FROM users WHERE createdAt >= ?');
+    const result = stmt.get(dateIso);
+    return result.count;
+  }
 }
 
 module.exports = User;

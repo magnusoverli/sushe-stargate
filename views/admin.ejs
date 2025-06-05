@@ -19,36 +19,60 @@
     </div>
   </header>
   
-  <div id="admin-panel" class="max-w-7xl mx-auto p-4 lg:p-6 space-y-8">
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="total-users"><%= stats.totalUsers %></div>
-        <div class="text-sm text-gray-400">Total Users</div>
+  <div id="admin-panel" class="max-w-7xl mx-auto p-4 lg:p-6 space-y-12">
+    <div>
+      <h2 class="text-lg font-semibold mb-2">User Statistics</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="total-users"><%= stats.totalUsers %></div>
+          <div class="text-sm text-gray-400">Total Users</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="new-users"><%= stats.newUsers7d %></div>
+          <div class="text-sm text-gray-400">New Users (7d)</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="total-lists"><%= stats.totalLists %></div>
+          <div class="text-sm text-gray-400">Total Lists</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="new-lists"><%= stats.newLists7d %></div>
+          <div class="text-sm text-gray-400">New Lists (7d)</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="total-albums"><%= stats.totalAlbums %></div>
+          <div class="text-sm text-gray-400">Total Albums</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="active-users"><%= stats.activeUsers %></div>
+          <div class="text-sm text-gray-400">Active Users (7d)</div>
+        </div>
       </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="total-lists"><%= stats.totalLists %></div>
-        <div class="text-sm text-gray-400">Total Lists</div>
-      </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="total-albums"><%= stats.totalAlbums %></div>
-        <div class="text-sm text-gray-400">Total Albums</div>
-      </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="active-users"><%= stats.activeUsers %></div>
-        <div class="text-sm text-gray-400">Active Users (7d)</div>
-      </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="memory-usage"><%= stats.memoryUsageMB %> MB</div>
-        <div class="text-sm text-gray-400">Memory Usage</div>
-      </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="system-uptime"><%= stats.systemUptimeHrs %></div>
-        <div class="text-sm text-gray-400">Uptime (hrs)</div>
-      </div>
-      <div class="bg-gray-900 rounded-lg p-4">
-        <div class="text-2xl font-bold" id="cpu-load"><%= stats.loadAvg1 %></div>
-        <div class="text-sm text-gray-400">CPU Load</div>
+    </div>
+
+    <div>
+      <h2 class="text-lg font-semibold mb-2">System Statistics</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="memory-usage"><%= stats.memoryUsageMB %> MB</div>
+          <div class="text-sm text-gray-400">Memory Usage</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="db-size"><%= stats.dbSizeMB %> MB</div>
+          <div class="text-sm text-gray-400">DB Size</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="system-uptime"><%= stats.systemUptimeHrs %></div>
+          <div class="text-sm text-gray-400">Uptime (hrs)</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="cpu-load"><%= stats.loadAvg1 %></div>
+          <div class="text-sm text-gray-400">CPU Load</div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="text-2xl font-bold" id="node-version"><%= stats.nodeVersion %></div>
+          <div class="text-sm text-gray-400">Node.js Version</div>
+        </div>
       </div>
     </div>
 
@@ -131,9 +155,12 @@
     <!-- System Actions -->
     <div class="bg-gray-900 rounded-lg p-6">
       <h2 class="text-lg font-semibold mb-4">System Actions</h2>
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <button onclick="clearAllSessions()" class="btn-secondary">
           <i class="fas fa-user-slash mr-2"></i>Clear All Sessions
+        </button>
+        <button onclick="cleanLogs()" class="btn-secondary">
+          <i class="fas fa-broom mr-2"></i>Clean Old Logs
         </button>
       </div>
     </div>

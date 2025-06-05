@@ -9,6 +9,8 @@ const { validateAdminCode } = require('../utils/adminCode');
 const { logActivity } = require('../services/activity');
 const { checkRateLimit } = require('../utils/helpers');
 const { db } = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 // Admin panel page
 router.get('/', ensureAdmin, async (req, res) => {
@@ -24,22 +26,34 @@ router.get('/', ensureAdmin, async (req, res) => {
     const { totalLists, totalAlbums } = await List.getStats();
     const activityStats = await ActivityLog.getStats(7);
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const newUsers7d = User.countSince(sevenDaysAgo);
+    const newLists7d = List.countCreatedSince(sevenDaysAgo);
+
+    const dbPath = path.join(process.env.DATA_DIR || './data', 'sushe.db');
+    const dbSizeMB = fs.existsSync(dbPath) ? (fs.statSync(dbPath).size / 1024 / 1024).toFixed(2) : 0;
+
     const os = require('os');
     const memoryUsageMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
     const systemUptimeHrs = (os.uptime() / 3600).toFixed(1);
     const loadAvg1 = os.loadavg()[0].toFixed(2);
+    const nodeVersion = process.version;
     
     res.render('admin', {
       users: userStats,
       stats: {
         totalUsers: users.length,
+        newUsers7d,
         totalLists,
+        newLists7d,
         totalAlbums,
+        dbSizeMB,
         activeUsers: activityStats.uniqueUsers,
         activeSessions: 0, // TODO: Count active sessions
         memoryUsageMB,
         systemUptimeHrs,
-        loadAvg1
+        loadAvg1,
+        nodeVersion
       }
     });
   } catch (error) {
@@ -251,6 +265,21 @@ router.post('/clear-sessions', ensureAdmin, async (req, res) => {
   }
 });
 
+// Clean old activity logs
+router.post('/clean-logs', ensureAdmin, async (req, res) => {
+  try {
+    const days = parseInt(process.env.LOG_RETENTION_DAYS) || 30;
+    const removed = await ActivityLog.cleanOldLogs(days);
+
+    await logActivity(req.user._id, 'activity_logs_cleaned', { removed }, req);
+
+    res.json({ success: true, removed });
+  } catch (error) {
+    console.error('Clean logs error:', error);
+    res.status(500).json({ error: 'Failed to clean logs' });
+  }
+});
+
 // Get dashboard statistics
 router.get('/api/stats', ensureAdmin, async (req, res) => {
   try {
@@ -258,20 +287,32 @@ router.get('/api/stats', ensureAdmin, async (req, res) => {
     const { totalLists, totalAlbums } = await List.getStats();
     const activityStats = await ActivityLog.getStats(7);
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const newUsers7d = User.countSince(sevenDaysAgo);
+    const newLists7d = List.countCreatedSince(sevenDaysAgo);
+
+    const dbPath = path.join(process.env.DATA_DIR || './data', 'sushe.db');
+    const dbSizeMB = fs.existsSync(dbPath) ? (fs.statSync(dbPath).size / 1024 / 1024).toFixed(2) : 0;
+
     const os = require('os');
     const memoryUsageMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
     const systemUptimeHrs = (os.uptime() / 3600).toFixed(1);
     const loadAvg1 = os.loadavg()[0].toFixed(2);
+    const nodeVersion = process.version;
 
     res.json({
       totalUsers: users.length,
+      newUsers7d,
       totalLists,
+      newLists7d,
       totalAlbums,
+      dbSizeMB,
       activeUsers: activityStats.uniqueUsers,
       activeSessions: 0,
       memoryUsageMB,
       systemUptimeHrs,
-      loadAvg1
+      loadAvg1,
+      nodeVersion
     });
   } catch (error) {
     console.error('Stats endpoint error:', error);

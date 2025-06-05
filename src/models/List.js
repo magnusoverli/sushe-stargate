@@ -92,6 +92,12 @@ class List {
     const result = stmt.get(userId);
     return result.count;
   }
+
+  static countCreatedSince(dateIso) {
+    const stmt = db.prepare('SELECT COUNT(*) as count FROM lists WHERE createdAt >= ?');
+    const result = stmt.get(dateIso);
+    return result.count;
+  }
   
   static async getStats() {
     const stmt = db.prepare('SELECT COUNT(*) as totalLists FROM lists');

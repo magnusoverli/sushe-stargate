@@ -13,9 +13,9 @@
   
   <!-- Settings Content -->
   <div class="max-w-4xl mx-auto p-4 lg:p-6 space-y-6">
-    <!-- User Info -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">User Information</h2>
+    <!-- Account -->
+    <section class="bg-gray-900 rounded-lg p-6 space-y-6">
+      <h2 class="text-lg font-semibold">Account</h2>
       <div class="space-y-2 text-sm">
         <div class="flex justify-between">
           <span class="text-gray-400">Email:</span>
@@ -36,38 +36,57 @@
           </div>
         <% } %>
       </div>
-    </div>
-    
-    <!-- Theme Settings -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">Theme</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Accent Color</label>
-          <div class="flex items-center gap-4">
-            <input type="color" id="accent-color" value="<%= user.accentColor %>" 
-                   class="w-20 h-10 bg-gray-800 border border-gray-700 rounded cursor-pointer">
-            <span class="text-sm text-gray-400">Current: <%= user.accentColor %></span>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <form id="update-email-form" class="space-y-4">
+          <h3 class="font-semibold">Update Email</h3>
+          <div>
+            <label class="block text-sm font-medium mb-2">New Email</label>
+            <input type="email" name="email" required
+                   class="input-dark w-full"
+                   placeholder="new@email.com">
           </div>
-        </div>
-        <button id="save-theme" class="btn-primary">
-          Save Theme
-        </button>
+          <div>
+            <label class="block text-sm font-medium mb-2">Password</label>
+            <input type="password" name="password" required
+                   class="input-dark w-full"
+                   placeholder="Enter password to confirm">
+          </div>
+          <button type="submit" class="btn-primary w-full">Update Email</button>
+        </form>
+
+        <form id="update-username-form" class="space-y-4">
+          <h3 class="font-semibold">Update Username</h3>
+          <div>
+            <label class="block text-sm font-medium mb-2">New Username</label>
+            <input type="text" name="username" required
+                   class="input-dark w-full"
+                   pattern="[a-zA-Z0-9_]{3,30}"
+                   placeholder="newusername">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Password</label>
+            <input type="password" name="password" required
+                   class="input-dark w-full"
+                   placeholder="Enter password to confirm">
+          </div>
+          <button type="submit" class="btn-primary w-full">Update Username</button>
+        </form>
       </div>
-    </div>
-    
-    <!-- Change Password -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">Change Password</h2>
+    </section>
+
+    <!-- Security -->
+    <section class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Security</h2>
       <form id="change-password-form" class="space-y-4">
-        <%- include('partials/password-input', { 
+        <%- include('partials/password-input', {
           id: 'currentPassword',
           name: 'currentPassword',
           label: 'Current Password',
           required: true,
           containerClass: ''
         }) %>
-        <%- include('partials/password-input', { 
+        <%- include('partials/password-input', {
           id: 'newPassword',
           name: 'newPassword',
           label: 'New Password',
@@ -75,94 +94,65 @@
           minlength: 8,
           containerClass: ''
         }) %>
-        <%- include('partials/password-input', { 
+        <%- include('partials/password-input', {
           id: 'confirmPassword',
           name: 'confirmPassword',
           label: 'Confirm New Password',
           required: true,
           containerClass: ''
         }) %>
-        <button type="submit" class="btn-primary">
-          Change Password
-        </button>
+        <button type="submit" class="btn-primary w-full">Change Password</button>
       </form>
-    </div>
-    
-    <!-- Update Email -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">Update Email</h2>
-      <form id="update-email-form" class="space-y-4">
+    </section>
+
+    <!-- Appearance -->
+    <section class="bg-gray-900 rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Appearance</h2>
+      <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-2">New Email</label>
-          <input type="email" name="email" required
-                 class="input-dark w-full" 
-                 placeholder="new@email.com">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Password</label>
-          <input type="password" name="password" required
-                 class="input-dark w-full"
-                 placeholder="Enter password to confirm">
-        </div>
-        <button type="submit" class="btn-primary">
-          Update Email
-        </button>
-      </form>
-    </div>
-    
-    <!-- Update Username -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">Update Username</h2>
-      <form id="update-username-form" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">New Username</label>
-          <input type="text" name="username" required
-                 class="input-dark w-full" 
-                 pattern="[a-zA-Z0-9_]{3,30}"
-                 placeholder="newusername">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Password</label>
-          <input type="password" name="password" required
-                 class="input-dark w-full"
-                 placeholder="Enter password to confirm">
-        </div>
-        <button type="submit" class="btn-primary">
-          Update Username
-        </button>
-      </form>
-    </div>
-    
-    <!-- Admin Access -->
-    <% if (user.role !== 'admin') { %>
-      <div class="bg-gray-900 rounded-lg p-6">
-        <h2 class="text-lg font-semibold mb-4">Admin Access</h2>
-        <p class="text-sm text-gray-400 mb-4">
-          Enter the admin code to gain administrative privileges.
-        </p>
-        <form id="admin-code-form" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-2">Admin Code</label>
-            <input type="text" name="adminCode" required
-                   class="input-dark w-full" 
-                   placeholder="Enter 8-character code"
-                   maxlength="8">
+          <label class="block text-sm font-medium mb-2">Accent Color</label>
+          <div class="flex items-center gap-4">
+            <input type="color" id="accent-color" value="<%= user.accentColor %>"
+                   class="w-20 h-10 bg-gray-800 border border-gray-700 rounded cursor-pointer">
+            <span class="text-sm text-gray-400">Current: <%= user.accentColor %></span>
           </div>
-          <button type="submit" class="btn-primary">
-            Submit Code
-          </button>
-        </form>
+        </div>
+        <button id="save-theme" class="btn-primary w-full">Save Theme</button>
       </div>
-    <% } %>
-    
-    <!-- Logout -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">Session</h2>
-      <a href="/auth/logout" class="btn-secondary inline-block">
-        <i class="fas fa-sign-out-alt mr-2"></i>
-        Logout
-      </a>
-    </div>
+    </section>
+
+    <!-- Other -->
+    <section class="bg-gray-900 rounded-lg p-6 space-y-6">
+      <% if (user.role === 'admin') { %>
+        <div>
+          <h2 class="text-lg font-semibold mb-4">Admin Options</h2>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a href="/admin" class="btn-secondary flex-1 inline-block"><i class="fas fa-shield-alt mr-2"></i>Admin Panel</a>
+            <button id="clear-sessions" class="btn-secondary flex-1"><i class="fas fa-user-slash mr-2"></i>Clear Sessions</button>
+          </div>
+        </div>
+      <% } else { %>
+        <div>
+          <h2 class="text-lg font-semibold mb-4">Admin Access</h2>
+          <p class="text-sm text-gray-400 mb-4">Enter the admin code to gain administrative privileges.</p>
+          <form id="admin-code-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Admin Code</label>
+              <input type="text" name="adminCode" required
+                     class="input-dark w-full"
+                     placeholder="Enter 8-character code"
+                     maxlength="8">
+            </div>
+            <button type="submit" class="btn-primary w-full">Submit Code</button>
+          </form>
+        </div>
+      <% } %>
+
+      <div>
+        <h2 class="text-lg font-semibold mb-4">Session</h2>
+        <a href="/auth/logout" class="btn-secondary inline-block"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -301,6 +291,25 @@ document.getElementById('admin-code-form')?.addEventListener('submit', async (e)
   } catch (error) {
     console.error('Admin code error:', error);
     alert('Failed to submit code');
+  }
+});
+
+// Clear all sessions (admin only)
+document.getElementById('clear-sessions')?.addEventListener('click', async () => {
+  if (!confirm('Clear all user sessions? This will log out all users.')) return;
+
+  try {
+    const response = await fetch('/admin/clear-sessions', { method: 'POST' });
+
+    if (response.ok) {
+      const data = await response.json();
+      alert(`Cleared ${data.count} sessions`);
+    } else {
+      throw new Error('Failed to clear sessions');
+    }
+  } catch (error) {
+    console.error('Clear sessions error:', error);
+    alert('Failed to clear sessions');
   }
 });
 

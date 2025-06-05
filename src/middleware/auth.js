@@ -3,7 +3,7 @@ module.exports = {
     if (req.isAuthenticated()) {
       return next();
     }
-    req.flash('error_msg', 'Please log in to view this resource');
+    // Redirect silently if the user is not authenticated
     res.redirect('/auth/login');
   },
   

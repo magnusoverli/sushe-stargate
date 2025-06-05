@@ -1,25 +1,23 @@
-<header class="bg-gray-900 border-b border-gray-800 flex-shrink-0">
+<header class="bg-gray-900 border-b border-gray-800 flex-shrink-0 lg:border-l lg:border-gray-800">
   <div class="flex items-center justify-between p-4">
-    <!-- Mobile menu button -->
-    <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white">
-      <i class="fas fa-bars text-xl"></i>
-    </button>
-    
-    <!-- Current list name -->
-    <div class="flex items-center gap-4">
-      <h1 class="font-cinzel text-xl lg:text-2xl font-semibold text-accent glow-text">
-        <span class="hidden lg:inline">SuShe Stargate</span>
-        <span class="lg:hidden">SuShe</span>
-      </h1>
-      <span class="text-gray-400 hidden lg:inline">|</span>
-      <span id="current-list-name" class="text-lg hidden lg:inline"></span>
+    <div class="flex items-center gap-2">
+      <!-- Mobile menu button -->
+      <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+      <!-- Current list name -->
+      <div class="flex items-center gap-4">
+        <h1 class="font-cinzel text-xl lg:text-2xl font-semibold text-accent glow-text">
+          <span class="hidden lg:inline">SuShe Stargate</span>
+          <span class="lg:hidden">SuShe</span>
+        </h1>
+        <span class="text-gray-400 hidden lg:inline">|</span>
+        <span id="current-list-name" class="text-lg hidden lg:inline"></span>
+      </div>
     </div>
-    
+
     <!-- Mobile actions -->
     <div class="flex lg:hidden items-center gap-3">
-      <div class="text-gray-500 text-xs" id="reorder-hint">
-        <i class="fas fa-hand-pointer"></i>
-      </div>
       <button id="settings-btn" class="text-gray-400 hover:text-white">
         <i class="fas fa-cog text-xl"></i>
       </button>

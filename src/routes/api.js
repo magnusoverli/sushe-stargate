@@ -194,10 +194,10 @@ router.post('/cover-art', ensureAuthenticated, async (req, res) => {
 
 // Fetch artist image
 router.post('/artist-image', ensureAuthenticated, async (req, res) => {
-  const { artist } = req.body;
+  const { artist, mbid } = req.body;
 
   try {
-    const imageUrl = await fetchArtistImage(artist);
+    const imageUrl = await fetchArtistImage(artist, mbid);
 
     if (imageUrl) {
       res.json({ url: imageUrl });

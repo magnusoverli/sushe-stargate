@@ -1,11 +1,19 @@
 const https = require('https');
+const LRU = require('lru-cache');
 
 // Reuse connections
 const httpsAgent = new https.Agent({ keepAlive: true });
 
+const searchCache = new LRU({ max: 100, ttl: 1000 * 60 * 10 }); // 10 min cache
+
 const USER_AGENT = 'SuShe-Stargate/1.0.0 (https://github.com/yourusername/sushe-stargate)';
 
 const searchMusicBrainz = (query, type = 'release-group') => {
+  const cacheKey = `${type}:${query}`;
+  if (searchCache.has(cacheKey)) {
+    return Promise.resolve(searchCache.get(cacheKey));
+  }
+
   return new Promise((resolve, reject) => {
     const encodedQuery = encodeURIComponent(query);
     const options = {
@@ -29,6 +37,7 @@ const searchMusicBrainz = (query, type = 'release-group') => {
       res.on('end', () => {
         try {
           const results = JSON.parse(data);
+          searchCache.set(cacheKey, results);
           resolve(results);
         } catch (error) {
           reject(error);

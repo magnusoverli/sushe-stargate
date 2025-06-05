@@ -92,7 +92,7 @@ function displayArtistResults(artists) {
            country: artist.country || artist.area?.name || ''
          }).replace(/'/g, '&apos;')})'>
       <div class="w-10 h-10 bg-gray-700 rounded overflow-hidden flex-shrink-0">
-        <img class="artist-thumbnail w-full h-full object-cover" data-artist="${escapeHtml(artist.name)}" alt="artist">
+        <img class="artist-thumbnail w-full h-full object-cover" data-artist="${escapeHtml(artist.name)}" data-mbid="${artist.id}" alt="artist">
       </div>
       <div>
         <div class="font-medium">${escapeHtml(artist.name)}</div>
@@ -607,13 +607,15 @@ function initializeArtistImageObserver() {
       if (entry.isIntersecting) {
         const img = entry.target;
         const name = img.dataset.artist;
-        if (artistImageCache.has(name)) {
-          img.src = artistImageCache.get(name);
+        const mbid = img.dataset.mbid || '';
+        const cacheKey = mbid || name;
+        if (artistImageCache.has(cacheKey)) {
+          img.src = artistImageCache.get(cacheKey);
           img.classList.add('loaded');
         } else {
-          const base64 = await fetchArtistThumbnail(name);
+          const base64 = await fetchArtistThumbnail(name, mbid);
           if (base64) {
-            artistImageCache.set(name, base64);
+            artistImageCache.set(cacheKey, base64);
             img.src = base64;
             img.onload = () => img.classList.add('loaded');
           }
@@ -631,12 +633,12 @@ function loadArtistImages() {
   });
 }
 
-async function fetchArtistThumbnail(artist) {
+async function fetchArtistThumbnail(artist, mbid) {
   try {
     const response = await fetch('/api/artist-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ artist })
+      body: JSON.stringify({ artist, mbid })
     });
     if (response.ok) {
       const data = await response.json();

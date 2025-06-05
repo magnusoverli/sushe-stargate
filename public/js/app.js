@@ -666,12 +666,6 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// Escape HTML
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 // Log activity
 async function logActivity(action, details = {}) {

@@ -38,6 +38,18 @@
         <div class="text-2xl font-bold" id="active-users"><%= stats.activeUsers %></div>
         <div class="text-sm text-gray-400">Active Users (7d)</div>
       </div>
+      <div class="bg-gray-900 rounded-lg p-4">
+        <div class="text-2xl font-bold" id="memory-usage"><%= stats.memoryUsageMB %> MB</div>
+        <div class="text-sm text-gray-400">Memory Usage</div>
+      </div>
+      <div class="bg-gray-900 rounded-lg p-4">
+        <div class="text-2xl font-bold" id="system-uptime"><%= stats.systemUptimeHrs %></div>
+        <div class="text-sm text-gray-400">Uptime (hrs)</div>
+      </div>
+      <div class="bg-gray-900 rounded-lg p-4">
+        <div class="text-2xl font-bold" id="cpu-load"><%= stats.loadAvg1 %></div>
+        <div class="text-sm text-gray-400">CPU Load</div>
+      </div>
     </div>
     
     <!-- Users Table -->

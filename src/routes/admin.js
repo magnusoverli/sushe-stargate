@@ -23,6 +23,11 @@ router.get('/', ensureAdmin, async (req, res) => {
     // Get system statistics
     const { totalLists, totalAlbums } = await List.getStats();
     const activityStats = await ActivityLog.getStats(7);
+
+    const os = require('os');
+    const memoryUsageMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+    const systemUptimeHrs = (os.uptime() / 3600).toFixed(1);
+    const loadAvg1 = os.loadavg()[0].toFixed(2);
     
     res.render('admin', {
       users: userStats,
@@ -31,7 +36,10 @@ router.get('/', ensureAdmin, async (req, res) => {
         totalLists,
         totalAlbums,
         activeUsers: activityStats.uniqueUsers,
-        activeSessions: 0 // TODO: Count active sessions
+        activeSessions: 0, // TODO: Count active sessions
+        memoryUsageMB,
+        systemUptimeHrs,
+        loadAvg1
       }
     });
   } catch (error) {
@@ -240,6 +248,34 @@ router.post('/clear-sessions', ensureAdmin, async (req, res) => {
   } catch (error) {
     console.error('Clear sessions error:', error);
     res.status(500).json({ error: 'Failed to clear sessions' });
+  }
+});
+
+// Get dashboard statistics
+router.get('/api/stats', ensureAdmin, async (req, res) => {
+  try {
+    const users = await User.findAll();
+    const { totalLists, totalAlbums } = await List.getStats();
+    const activityStats = await ActivityLog.getStats(7);
+
+    const os = require('os');
+    const memoryUsageMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+    const systemUptimeHrs = (os.uptime() / 3600).toFixed(1);
+    const loadAvg1 = os.loadavg()[0].toFixed(2);
+
+    res.json({
+      totalUsers: users.length,
+      totalLists,
+      totalAlbums,
+      activeUsers: activityStats.uniqueUsers,
+      activeSessions: 0,
+      memoryUsageMB,
+      systemUptimeHrs,
+      loadAvg1
+    });
+  } catch (error) {
+    console.error('Stats endpoint error:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
 
